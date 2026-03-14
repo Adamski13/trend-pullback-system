@@ -1,0 +1,25 @@
+strategy:
+  regime_ma_length: 200
+  ema_length: 21
+  atr_length: 14
+  risk_per_layer_pct: 1.0
+  stop_buffer_atr_mult: 0.5
+  trail_atr_mult: 2.5
+  max_layers: 3
+  allow_shorts: false
+
+execution:
+  initial_capital: 100000
+  commission_pct: 0.0
+  slippage_pct: 0.0
+  point_value: 1.0
+
+data:
+  symbols:
+    - QQQ
+    - SPY
+    - GLD
+    - BTC-USD
+  start_date: "2015-01-01"
+  end_date: null  # null = today
+  timeframe: "1d"
