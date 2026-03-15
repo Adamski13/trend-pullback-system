@@ -7,6 +7,7 @@ Data is cached to disk as parquet to avoid repeated downloads.
 """
 
 import os
+import requests
 import pandas as pd
 import yfinance as yf
 from datetime import date
@@ -57,6 +58,64 @@ def _fetch_stooq(symbol: str, start: str, end: str) -> pd.DataFrame:
     return df
 
 
+# Binance symbol map: ticker → Binance trading pair
+_BINANCE_MAP = {
+    "BTC-USD": "BTCUSDT",
+    "ETH-USD": "ETHUSDT",
+    "SOL-USD": "SOLUSDT",
+}
+
+
+def _fetch_binance(symbol: str, start: str, end: str) -> pd.DataFrame:
+    """
+    Fallback for crypto: Binance public klines API, no auth required.
+    Paginates automatically to cover the full date range.
+    """
+    pair = _BINANCE_MAP.get(symbol)
+    if not pair:
+        raise ValueError(f"No Binance mapping for {symbol}")
+
+    start_ms = int(pd.Timestamp(start).timestamp() * 1000)
+    end_ms = int(pd.Timestamp(end).timestamp() * 1000)
+    url = "https://api.binance.com/api/v3/klines"
+    rows = []
+
+    while start_ms < end_ms:
+        params = {
+            "symbol": pair,
+            "interval": "1d",
+            "startTime": start_ms,
+            "endTime": end_ms,
+            "limit": 1000,
+        }
+        resp = requests.get(url, params=params, timeout=20)
+        resp.raise_for_status()
+        batch = resp.json()
+        if not batch:
+            break
+        rows.extend(batch)
+        # Each row: [open_time, open, high, low, close, volume, ...]
+        last_open_time = batch[-1][0]
+        if last_open_time <= start_ms:
+            break
+        start_ms = last_open_time + 1
+
+    if not rows:
+        raise ValueError(f"Binance returned no data for {pair}")
+
+    df = pd.DataFrame(rows, columns=[
+        "ts", "Open", "High", "Low", "Close", "Volume",
+        "close_time", "quote_vol", "trades", "taker_base", "taker_quote", "ignore"
+    ])
+    df = df[["ts", "Open", "High", "Low", "Close", "Volume"]].copy()
+    df["Date"] = pd.to_datetime(df["ts"], unit="ms").dt.normalize()
+    df = df.drop_duplicates("Date").set_index("Date").drop(columns="ts")
+    for col in ["Open", "High", "Low", "Close", "Volume"]:
+        df[col] = df[col].astype(float)
+    df.sort_index(inplace=True)
+    return df
+
+
 def load_data(symbol: str, start_date: str, end_date: str | None = None) -> pd.DataFrame:
     """
     Return a DataFrame with columns: Open, High, Low, Close, Volume.
@@ -87,15 +146,19 @@ def load_data(symbol: str, start_date: str, end_date: str | None = None) -> pd.D
                 if not df.empty:
                     print(f"  [{symbol}] fetched via stooq")
             except Exception as e:
-                print(f"  [{symbol}] stooq failed ({e})")
+                print(f"  [{symbol}] stooq failed ({e}), trying CoinGecko...")
+
+        # ── Fallback: Binance (crypto only) ───────────────────────────────────
+        if df.empty and symbol in _BINANCE_MAP:
+            try:
+                df = _fetch_binance(symbol, start_date, end)
+                if not df.empty:
+                    print(f"  [{symbol}] fetched via Binance")
+            except Exception as e:
+                print(f"  [{symbol}] Binance failed ({e})")
 
         if df.empty:
-            raise ValueError(
-                f"No data returned for {symbol}. "
-                "Yahoo Finance may be rate-limiting. Try again in a few minutes, "
-                "or install pandas-datareader for the stooq fallback: "
-                "pip install pandas-datareader"
-            )
+            raise ValueError(f"No data returned for {symbol} from any source.")
 
         keep = [c for c in ["Open", "High", "Low", "Close", "Volume"] if c in df.columns]
         df = df[keep].copy()
