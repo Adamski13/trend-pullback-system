@@ -3,7 +3,6 @@ __pycache__/
 *.pyo
 .DS_Store
 data/
-results/
 *.parquet
 *.egg-info/
 dist/
