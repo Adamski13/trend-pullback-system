@@ -134,3 +134,108 @@ def print_summary(metrics: dict, symbol: str = "") -> None:
     for label, val in rows:
         print(f"  {label:<26} {val:>12}")
     print(f"{'='*60}\n")
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Portfolio-specific plots
+# ─────────────────────────────────────────────────────────────────────────────
+
+def plot_portfolio_equity(
+    portfolio_equity: pd.Series,
+    instrument_equity: pd.DataFrame,
+    benchmark_equity: pd.Series,
+    save_path: str | None = None,
+) -> None:
+    """Combined equity + per-instrument contributions + benchmark."""
+    fig, (ax1, ax2) = plt.subplots(2, 1, figsize=(14, 10), sharex=True,
+                                   gridspec_kw={"height_ratios": [3, 1]})
+
+    # Top: equity curves
+    ax1.plot(portfolio_equity.index, portfolio_equity.values,
+             label="Portfolio", color="steelblue", linewidth=2.0, zorder=5)
+    bah_norm = benchmark_equity / benchmark_equity.iloc[0] * portfolio_equity.iloc[0]
+    ax1.plot(bah_norm.index, bah_norm.values,
+             label="Equal-Weight B&H", color="grey", linewidth=1.2,
+             linestyle="--", alpha=0.7)
+
+    colors = ["#e67e22", "#27ae60", "#8e44ad"]
+    for (sym, series), color in zip(instrument_equity.items(), colors):
+        initial = portfolio_equity.iloc[0]
+        ax1.plot(series.index, series.values + initial,
+                 label=f"{sym} contribution", color=color,
+                 linewidth=0.9, linestyle=":", alpha=0.8)
+
+    ax1.set_title("Portfolio Equity — TPS v1 (QQQ + GLD + BTC-USD)")
+    ax1.set_ylabel("Portfolio Value ($)")
+    ax1.yaxis.set_major_formatter(mticker.FuncFormatter(lambda x, _: f"${x:,.0f}"))
+    ax1.legend(loc="upper left", fontsize=9)
+    ax1.grid(alpha=0.3)
+
+    # Bottom: drawdown
+    roll_max = portfolio_equity.cummax()
+    dd_pct = (portfolio_equity - roll_max) / roll_max * 100
+    ax2.fill_between(dd_pct.index, dd_pct.values, 0, color="crimson", alpha=0.4)
+    ax2.plot(dd_pct.index, dd_pct.values, color="crimson", linewidth=0.8)
+    ax2.set_ylabel("Drawdown (%)")
+    ax2.yaxis.set_major_formatter(mticker.FuncFormatter(lambda x, _: f"{x:.1f}%"))
+    ax2.grid(alpha=0.3)
+
+    plt.tight_layout()
+    if save_path:
+        _ensure_dir(os.path.dirname(save_path))
+        fig.savefig(save_path, dpi=150)
+    plt.close(fig)
+
+
+def plot_instrument_contributions(
+    instrument_pnl: pd.DataFrame,
+    save_path: str | None = None,
+) -> None:
+    """Stacked area chart of per-instrument cumulative P&L contribution."""
+    fig, ax = plt.subplots(figsize=(14, 6))
+    colors = ["#3498db", "#f39c12", "#2ecc71"]
+    symbols = instrument_pnl.columns.tolist()
+
+    ax.stackplot(
+        instrument_pnl.index,
+        [instrument_pnl[sym].clip(lower=0).values for sym in symbols],
+        labels=[f"{s} (gains)" for s in symbols],
+        colors=colors, alpha=0.6,
+    )
+    for sym, color in zip(symbols, colors):
+        neg = instrument_pnl[sym].clip(upper=0)
+        ax.fill_between(instrument_pnl.index, neg.values, 0,
+                        color=color, alpha=0.3)
+
+    ax.axhline(0, color="black", linewidth=0.8, linestyle="--")
+    ax.set_title("Per-Instrument P&L Contribution (Cumulative)")
+    ax.set_ylabel("Cumulative P&L ($)")
+    ax.yaxis.set_major_formatter(mticker.FuncFormatter(lambda x, _: f"${x:,.0f}"))
+    ax.legend(loc="upper left", fontsize=9)
+    ax.grid(alpha=0.3)
+    plt.tight_layout()
+    if save_path:
+        _ensure_dir(os.path.dirname(save_path))
+        fig.savefig(save_path, dpi=150)
+    plt.close(fig)
+
+
+def plot_correlation_matrix(
+    daily_returns_by_instrument: pd.DataFrame,
+    save_path: str | None = None,
+) -> None:
+    """Heatmap of pairwise return correlations."""
+    corr = daily_returns_by_instrument.corr()
+    fig, ax = plt.subplots(figsize=(7, 6))
+    sns.heatmap(
+        corr, annot=True, fmt=".2f", center=0,
+        cmap="coolwarm", linewidths=0.5,
+        vmin=-1, vmax=1, ax=ax,
+        square=True,
+    )
+    ax.set_title("Return Correlation Matrix")
+    plt.tight_layout()
+    if save_path:
+        _ensure_dir(os.path.dirname(save_path))
+        fig.savefig(save_path, dpi=150)
+    plt.close(fig)
