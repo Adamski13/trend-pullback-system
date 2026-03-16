@@ -222,6 +222,12 @@ A way to get rich quick. A system that wins most of the time. A replacement for 
 - [x] All results committed to GitHub
 - [x] Phase 5: Instrument universe expansion (USO, SLV, EWG, EWJ, ETH — all failed PF > 1.3 filter)
 - [x] Final portfolio confirmed: QQQ + GLD + BTC-USD (no additions)
+- [x] Pine Script v1 — TradingView implementation (`pinescript/tps_v1.pine`)
+- [x] TPS v2 — Carver-style EWMAC system built, validated, and production config set
+- [x] TPS v2 friction optimization (daily + 30% buffer is optimal)
+- [x] TPS v2 vol target sweep (20% is sweet spot)
+- [x] TPS v2 expanded instrument test (all failed PF > 1.3; ETH borderline at 1.15)
+- [x] TPS v2 walk-forward validation (7/7 windows positive, mean Sharpe 1.06)
 
 ### ✅ Phase 5: Expand Instrument Universe (Completed)
 Tested 5 additional instruments with default config + frictions (0.1% comm + 0.05% slip):
@@ -244,11 +250,46 @@ Tested 5 additional instruments with default config + frictions (0.1% comm + 0.0
 - Instrument selection is itself a form of fitting — we should be honest that we're trading a curated set, not "all trending markets"
 - The structural reasons these 3 work (tech sector drift, macro gold cycles, crypto adoption) are defensible but not guaranteed to persist
 
+### ✅ TPS v2 — Carver-Style EWMAC System (Completed)
+A full redesign using continuous EWMAC forecasts and volatility-targeted position sizing.
+See `tps_v2/RESULTS.md` for complete results.
+
+**Architecture:**
+- 3 EWMAC speeds blended (8/32, 16/64, 32/128), equal-weighted, FDM=1.15
+- Vol-targeted sizing: `N = (Capital × VolTarget × InstrWeight × IDM × Forecast/10) / (InstVol × Price)`
+- No hard stops — positions scaled continuously by forecast strength
+- Trade buffering: only rebalance when target differs by >threshold% of avg position
+
+**Production config:** daily rebalance, 30% buffer, 20% vol target, QQQ + GLD + BTC-USD
+
+**Key results (2017–2025):**
+| Metric | Value |
+|---|---|
+| CAGR | 30.6% |
+| Sharpe | 1.15 |
+| Max DD | -25.7% |
+| Calmar | 1.19 |
+| Trades | 570 |
+
+**Walk-forward validation:** 7/7 rolling test windows positive CAGR, mean Sharpe 1.06 across windows.
+OOS Sharpe (2021–2025) = 0.85 vs IS (2012–2020) = 1.64. Degradation explained by period; not overfitting.
+
+**v2 vs v1 comparison:**
+- v2 CAGR (30.6%) >> v1 CAGR (16.1%) — Carver sizing captures more of the trend
+- v2 Sharpe (1.15) >> v1 Sharpe (0.88) — continuous forecast smoother than binary entry/exit
+- v2 max DD (-25.7%) similar to v1 (-23.2%) — vol targeting holds risk constant
+- v2 has no hard stops; v1 relies on ATR trailing stops
+
+### ✅ Pine Script v1 (Completed)
+TradingView Pine Script v6 implementation of TPS v1.
+`pinescript/tps_v1.pine` — includes regime filter, EMA pullback signals, ATR trailing stops, pyramid layer tracking, alert conditions.
+
 ### 📋 Planned
-- [ ] **Pine Script conversion** — TradingView version of TPS v1 for visual chart analysis and practice trading
-- [ ] **Alert/notification system** — automated daily signal checking with alerts via email/Telegram/webhook
+- [ ] **Pine Script v2** — TradingView EWMAC forecast visualizer with continuous position sizing display
+- [ ] **ETH-USD investigation** — borderline at PF 1.15, worth testing with lower filter or longer history
+- [ ] **Live signal generator** — daily script that outputs current forecast + target position for each instrument
 - [ ] **Paper trading period** — 3-6 months of live signal tracking without real capital
-- [ ] **Intraday system (separate project)** — different edge, different timeframe, different validation process. Designed for engagement and income while the daily system runs in the background.
+- [ ] **Alert/notification system** — automated daily signal checking with alerts via email/Telegram/webhook
 
 ### 💡 Future Considerations
 - Short-side testing on commodities and crypto (where downtrends are real)
@@ -284,11 +325,11 @@ python run_portfolio.py --commission 0.1 --slippage 0.05
 ### Project Structure
 ```
 trend-pullback-system/
-├── STRATEGY_SPEC.md          ← detailed strategy specification
+├── STRATEGY_SPEC.md          ← TPS v1 strategy specification
 ├── PORTFOLIO_SPEC.md         ← portfolio simulation spec
 ├── PROJECT_STATUS.md         ← this file (development log + honest assessment)
 ├── config/default_config.yaml
-├── src/
+├── src/                      ← TPS v1 source
 │   ├── data_loader.py        ← yfinance + stooq + Binance fallbacks
 │   ├── indicators.py         ← SMA, EMA, ATR
 │   ├── strategy.py           ← core strategy logic
@@ -296,10 +337,22 @@ trend-pullback-system/
 │   ├── portfolio.py          ← multi-instrument portfolio engine
 │   ├── metrics.py            ← 25+ performance metrics
 │   └── visualizer.py         ← equity curves, drawdowns, heatmaps, correlations
-├── tests/test_strategy.py    ← 17 unit tests
-├── run_backtest.py           ← single/multi-instrument backtest CLI
-├── run_portfolio.py          ← portfolio backtest CLI
-└── results/                  ← all backtest outputs organized by phase
+├── tps_v2/                   ← TPS v2 (Carver EWMAC system)
+│   ├── RESULTS.md            ← v2 full results summary
+│   ├── config/default_config.yaml
+│   ├── src/
+│   │   ├── data_loader.py    ← same fallback chain as v1
+│   │   ├── indicators.py     ← EWMAC forecast computation
+│   │   └── strategy.py       ← StrategyV2 + Backtester classes
+│   ├── run_backtest.py       ← CLI with --rebalance and --buffer flags
+│   ├── run_analysis.py       ← 4-phase analysis suite
+│   ├── run_walkforward.py    ← IS/OOS split + rolling walk-forward
+│   └── results/              ← backtest, analysis, and walk-forward outputs
+├── pinescript/tps_v1.pine    ← TradingView Pine Script v6 implementation
+├── tests/test_strategy.py    ← 17 unit tests (v1)
+├── run_backtest.py           ← v1 single/multi-instrument backtest CLI
+├── run_portfolio.py          ← v1 portfolio backtest CLI
+└── results/                  ← v1 backtest outputs organized by phase
 ```
 
 ### Data Sources

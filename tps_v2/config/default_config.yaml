@@ -1,0 +1,75 @@
+# TPS v2.1 Default Configuration
+# Carver-style continuous forecast system
+
+# === INSTRUMENTS ===
+instruments:
+  - symbol: QQQ
+    asset_class: equity
+  - symbol: GLD
+    asset_class: commodity
+  - symbol: BTC-USD
+    asset_class: crypto
+
+# === EWMAC SIGNAL CONFIGURATION ===
+ewmac:
+  variations:
+    - [8, 32]
+    - [16, 64]
+    - [32, 128]
+  forecast_scalars:
+    "8_32": 10.6
+    "16_64": 7.5
+    "32_128": 5.3
+  forecast_weights:
+    "8_32": 0.333
+    "16_64": 0.334
+    "32_128": 0.333
+  forecast_div_multiplier: 1.15
+
+# === REGIME FILTER ===
+regime:
+  sma_period: 200
+  enabled: true
+
+# === FORECAST LIMITS ===
+forecast:
+  cap: 20
+  floor: 0
+
+# === POSITION SIZING ===
+sizing:
+  vol_target_pct: 0.20
+  instrument_weights:
+    QQQ: 0.333
+    GLD: 0.334
+    BTC-USD: 0.333
+  instrument_div_multiplier: 1.5
+  vol_lookback_days: 25
+  vol_floor_days: 100
+
+# === REBALANCE FREQUENCY ===
+# Options: 'daily', 'weekly', 'monthly'
+# Daily + large buffer outperforms weekly: 30.6% CAGR vs 26.7% at same ~570 trades
+rebalance:
+  frequency: daily
+
+# === TRADE BUFFERING ===
+# Only trade when target differs from current by this fraction of avg position
+# 0.10 = 10%, 0.30 = 30%. Higher = fewer trades, lower friction
+# 30% buffer: 570 trades, $110k friction, 30.6% CAGR — best risk-adjusted config
+buffering:
+  threshold_fraction: 0.30
+
+# === PORTFOLIO ===
+portfolio:
+  initial_capital: 100000
+
+# === FRICTION ===
+frictions:
+  commission_pct: 0.001
+  slippage_pct: 0.0005
+
+# === DATA ===
+data:
+  start_date: "2012-01-01"
+  end_date: "2025-12-31"
