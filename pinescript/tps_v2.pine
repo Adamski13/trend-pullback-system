@@ -122,9 +122,9 @@ float forecast = math.max(0.0, math.min(blended, i_fc_cap)) * (i_regime_on and n
 // ─────────────────────────────────────────────────────────────────────────────
 // N = (Equity × VolTarget × InstrWeight × IDM × Forecast/10) / (InstVol × Price)
 
-float target_float = inst_vol_annual > 0.001 and close > 0 ?
-    (strategy.equity * i_vol_target * i_instr_weight * i_idm * (forecast / 10.0)) / (inst_vol_annual * close) :
-    0.0
+float _sz_num = strategy.equity * i_vol_target * i_instr_weight * i_idm * (forecast / 10.0)
+float _sz_den = inst_vol_annual * close
+float target_float = inst_vol_annual > 0.001 and close > 0 ? _sz_num / _sz_den : 0.0
 
 float target_qty = math.max(0.0, math.round(target_float))
 
@@ -168,23 +168,11 @@ plot(i_show_ema ? ema32  : na, "EMA 32",  color=color.new(color.orange, 20), lin
 plot(i_show_ema ? ema128 : na, "EMA 128", color=color.new(color.purple, 30), linewidth=1)
 
 // Regime background — intensity scales with forecast strength
-color bg =
-    not regime_bull and i_regime_on ? color.new(color.red,   93) :
-    forecast >= 15                  ? color.new(color.green, 82) :
-    forecast >= 10                  ? color.new(color.green, 88) :
-    forecast >= 5                   ? color.new(color.green, 93) :
-    forecast > 0                    ? color.new(color.gray,  95) :
-    na
+color bg = not regime_bull and i_regime_on ? color.new(color.red, 93) : forecast >= 15 ? color.new(color.green, 82) : forecast >= 10 ? color.new(color.green, 88) : forecast >= 5 ? color.new(color.green, 93) : forecast > 0 ? color.new(color.gray, 95) : na
 bgcolor(bg, title="Regime / forecast background")
 
 // Bar color maps forecast strength
-color bc =
-    not regime_bull  ? color.new(color.red,    30) :
-    forecast >= 15   ? color.new(color.green,   0) :
-    forecast >= 10   ? color.new(color.green,  30) :
-    forecast >= 5    ? color.new(color.yellow, 10) :
-    forecast > 0     ? color.new(color.gray,   10) :
-    color.new(color.red, 50)
+color bc = not regime_bull ? color.new(color.red, 30) : forecast >= 15 ? color.new(color.green, 0) : forecast >= 10 ? color.new(color.green, 30) : forecast >= 5 ? color.new(color.yellow, 10) : forecast > 0 ? color.new(color.gray, 10) : color.new(color.red, 50)
 barcolor(bc, title="Forecast bar color")
 
 // ─── Signal markers ───────────────────────────────────────────────────────────
@@ -237,12 +225,7 @@ var table tbl = table.new(
 )
 
 if i_show_table and barstate.islast
-    color fc_col =
-        forecast >= 15 ? color.lime   :
-        forecast >= 10 ? color.green  :
-        forecast >= 5  ? color.yellow :
-        forecast > 0   ? color.orange :
-        color.red
+    color fc_col = forecast >= 15 ? color.lime : forecast >= 10 ? color.green : forecast >= 5 ? color.yellow : forecast > 0 ? color.orange : color.red
 
     // Header
     table.cell(tbl, 0, 0, "TPS v2", text_color=color.white,  text_size=size.small, bgcolor=color.new(color.navy, 50))
@@ -289,43 +272,31 @@ var label lbl = na
 if i_show_label and barstate.islast
     label.delete(lbl)
 
-    string signal_str =
-        forecast >= 15 ? "STRONG ▲▲" :
-        forecast >= 10 ? "MODERATE ▲" :
-        forecast >= 5  ? "WEAK ▲"     :
-        forecast > 0   ? "MINIMAL"    :
-        "FLAT (regime off)"
+    string signal_str = forecast >= 15 ? "STRONG ▲▲" : forecast >= 10 ? "MODERATE ▲" : forecast >= 5 ? "WEAK ▲" : forecast > 0 ? "MINIMAL" : "FLAT (regime off)"
 
-    string pos_str = current_qty > 0 ?
-        str.tostring(current_qty) + " sh  (target: " + str.tostring(target_qty) + ")" :
-        "FLAT"
+    string pos_str = current_qty > 0 ? str.tostring(current_qty) + " sh  (target: " + str.tostring(target_qty) + ")" : "FLAT"
 
-    string buf_str = should_trade ?
-        "⚡ REBALANCE (" + (delta > 0 ? "+" : "") + str.tostring(math.round(delta)) + ")" :
-        "Buffered (Δ=" + str.tostring(math.round(delta, 1)) + " < " + str.tostring(math.round(buffer_size, 1)) + ")"
+    string _rbal = "⚡ REBALANCE (" + (delta > 0 ? "+" : "") + str.tostring(math.round(delta)) + ")"
+    string _buf  = "Buffered (Δ=" + str.tostring(math.round(delta, 1)) + " < " + str.tostring(math.round(buffer_size, 1)) + ")"
+    string buf_str = should_trade ? _rbal : _buf
 
-    string info =
-        "TPS v2  —  EWMAC\n"                                               +
-        "────────────────────────\n"                                        +
-        "Forecast:   " + str.tostring(math.round(forecast, 1)) + " / 20   " + signal_str + "\n" +
-        "  8/32:    " + str.tostring(math.round(fc_8_32,   2)) + "\n"      +
-        "  16/64:   " + str.tostring(math.round(fc_16_64,  2)) + "\n"      +
-        "  32/128:  " + str.tostring(math.round(fc_32_128, 2)) + "\n"      +
-        "────────────────────────\n"                                        +
-        "Regime:     " + (regime_bull ? "BULL ▲" : "BEAR ▼") + "\n"       +
-        "Inst vol:   " + str.tostring(math.round(inst_vol_annual * 100, 1)) + "% annual\n" +
-        "Position:   " + pos_str + "\n"                                    +
-        buf_str + "\n"                                                      +
-        "────────────────────────\n"                                        +
-        "SMA 200:  " + str.tostring(sma200, "#.##") + "\n"                 +
-        "EMA 8:    " + str.tostring(ema8,   "#.##") + "\n"                 +
-        "EMA 32:   " + str.tostring(ema32,  "#.##") + "\n"                 +
-        "EMA 128:  " + str.tostring(ema128, "#.##")
+    string _ln1 = "TPS v2  —  EWMAC\n────────────────────────\n"
+    string _ln2 = "Forecast:   " + str.tostring(math.round(forecast, 1)) + " / 20   " + signal_str + "\n"
+    string _ln3 = "  8/32:    " + str.tostring(math.round(fc_8_32,   2)) + "\n"
+    string _ln4 = "  16/64:   " + str.tostring(math.round(fc_16_64,  2)) + "\n"
+    string _ln5 = "  32/128:  " + str.tostring(math.round(fc_32_128, 2)) + "\n"
+    string _ln6 = "────────────────────────\n"
+    string _ln7 = "Regime:     " + (regime_bull ? "BULL ▲" : "BEAR ▼") + "\n"
+    string _ln8 = "Inst vol:   " + str.tostring(math.round(inst_vol_annual * 100, 1)) + "% annual\n"
+    string _ln9 = "Position:   " + pos_str + "\n" + buf_str + "\n"
+    string _lnA = "────────────────────────\n"
+    string _lnB = "SMA 200:  " + str.tostring(sma200, "#.##") + "\n"
+    string _lnC = "EMA 8:    " + str.tostring(ema8,   "#.##") + "\n"
+    string _lnD = "EMA 32:   " + str.tostring(ema32,  "#.##") + "\n"
+    string _lnE = "EMA 128:  " + str.tostring(ema128, "#.##")
+    string info = _ln1 + _ln2 + _ln3 + _ln4 + _ln5 + _ln6 + _ln7 + _ln8 + _ln9 + _lnA + _lnB + _lnC + _lnD + _lnE
 
-    color lbl_bg =
-        forecast >= 10 ? color.new(color.green, 70) :
-        forecast > 0   ? color.new(color.navy,  70) :
-        color.new(color.maroon, 70)
+    color lbl_bg = forecast >= 10 ? color.new(color.green, 70) : forecast > 0 ? color.new(color.navy, 70) : color.new(color.maroon, 70)
 
     lbl := label.new(
         x         = bar_index,
