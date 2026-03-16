@@ -22,6 +22,10 @@ _STOOQ_MAP = {
     "GLD": "gld.us",
     "BTC-USD": "btc-usd.cr",
     "^GDAXI": "^dax",
+    "USO": "uso.us",
+    "SLV": "slv.us",
+    "EWG": "ewg.us",
+    "EWJ": "ewj.us",
 }
 
 
