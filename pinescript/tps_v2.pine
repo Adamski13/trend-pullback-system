@@ -21,15 +21,15 @@
 
 //@version=6
 strategy(
-    title                   = "Trend Pullback System v2 — EWMAC",
-    shorttitle              = "TPS v2",
-    overlay                 = true,
-    initial_capital         = 100000,
-    process_orders_on_close = true,
-    calc_on_every_tick      = false,
-    commission_type         = strategy.commission.percent,
-    commission_value        = 0.075,   // per fill; close+reopen on rebalance = ~0.15% round-trip
-    slippage                = 0
+    title           = "Trend Pullback System v2 — EWMAC",
+    shorttitle      = "TPS v2",
+    overlay         = true,
+    initial_capital = 100000,
+    pyramiding      = 100,
+    calc_on_every_tick = false,
+    commission_type = strategy.commission.percent,
+    commission_value = 0.15,
+    slippage        = 0
 )
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -138,19 +138,34 @@ float buffer_size  = i_buffer * math.max(avg_pos, 1.0)
 bool  should_trade = math.abs(delta) >= buffer_size
 
 // ─────────────────────────────────────────────────────────────────────────────
-// STRATEGY ORDERS — close and reopen at target qty each rebalance
-// Pine Script's strategy engine handles absolute sizing most reliably via
-// strategy.close_all() + strategy.entry() on the same bar. Both execute at
-// the same close price (process_orders_on_close=true).
+// STRATEGY ORDERS — incremental entry / partial close
+//
+// strategy.entry("Long", long, qty=n)  adds n shares (pyramiding=100 allows this)
+// strategy.close("Long", qty=n)        removes n shares from the "Long" position
+// strategy.close_all()                 full exit when forecast zeroes
+//
+// Fills at next bar's open (default process_orders_on_close=false).
 // ─────────────────────────────────────────────────────────────────────────────
 
+float _pos = strategy.position_size
+float _adj = target_qty - _pos
+// Safety cap: never risk more than 95% of equity on a single instrument
+float _max_qty = math.max(math.floor(strategy.equity * 0.95 / close), 1.0)
+float _safe_target = math.min(target_qty, _max_qty)
+
 if should_trade
-    float qty_stepped = math.max(math.round(target_qty / i_min_qty) * i_min_qty, 0.0)
-    if target_qty <= 0.0
-        strategy.close_all(comment="Forecast→0")
-    else
-        strategy.close_all(comment="Rebal")
-        strategy.entry("Long", strategy.long, qty=qty_stepped, comment="→" + str.tostring(int(qty_stepped)))
+    if _safe_target <= 0.0
+        strategy.close_all(comment="F=0")
+    else if _pos <= 0.0
+        strategy.entry("Long", strategy.long, qty=_safe_target, comment="Enter")
+    else if _adj > 0.5
+        float _add = math.min(math.round(_adj), _max_qty - _pos)
+        if _add > 0
+            strategy.entry("Long", strategy.long, qty=_add, comment="Scale↑")
+    else if _adj < -0.5
+        float _cut = math.min(math.round(math.abs(_adj)), _pos)
+        if _cut > 0
+            strategy.close("Long", qty=_cut, comment="Scale↓")
 
 // ─────────────────────────────────────────────────────────────────────────────
 // VISUALS — Price chart overlay
