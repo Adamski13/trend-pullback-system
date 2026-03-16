@@ -28,7 +28,7 @@ strategy(
     process_orders_on_close = true,
     calc_on_every_tick      = false,
     commission_type         = strategy.commission.percent,
-    commission_value        = 0.15,
+    commission_value        = 0.075,   // per fill; close+reopen on rebalance = ~0.15% round-trip
     slippage                = 0
 )
 
@@ -138,22 +138,19 @@ float buffer_size  = i_buffer * math.max(avg_pos, 1.0)
 bool  should_trade = math.abs(delta) >= buffer_size
 
 // ─────────────────────────────────────────────────────────────────────────────
-// STRATEGY ORDERS — incremental (buy/sell the delta, not full close+reopen)
+// STRATEGY ORDERS — close and reopen at target qty each rebalance
+// Pine Script's strategy engine handles absolute sizing most reliably via
+// strategy.close_all() + strategy.entry() on the same bar. Both execute at
+// the same close price (process_orders_on_close=true).
 // ─────────────────────────────────────────────────────────────────────────────
 
 if should_trade
-    float trade_qty = math.abs(delta)
-    float stepped   = math.max(math.round(trade_qty / i_min_qty) * i_min_qty, 0.0)
-
-    if target_qty == 0.0
+    float qty_stepped = math.max(math.round(target_qty / i_min_qty) * i_min_qty, 0.0)
+    if target_qty <= 0.0
         strategy.close_all(comment="Forecast→0")
-    else if delta > 0.0 and stepped > 0.0
-        strategy.order("Scale Up",   strategy.long,  qty=stepped, comment="↑" + str.tostring(math.round(target_qty)))
-    else if delta < 0.0 and stepped > 0.0
-        if current_qty - stepped <= 0.0
-            strategy.close_all(comment="Scale→0")
-        else
-            strategy.order("Scale Down", strategy.short, qty=stepped, comment="↓" + str.tostring(math.round(target_qty)))
+    else
+        strategy.close_all(comment="Rebal")
+        strategy.entry("Long", strategy.long, qty=qty_stepped, comment="→" + str.tostring(int(qty_stepped)))
 
 // ─────────────────────────────────────────────────────────────────────────────
 // VISUALS — Price chart overlay
