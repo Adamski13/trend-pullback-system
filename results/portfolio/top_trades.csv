@@ -1,0 +1,11 @@
+,symbol,entry_date,exit_date,holding_days,pnl,r_multiple,direction,exit_reason,layer
+1,GLD,2025-08-24,2025-10-21,58,129707.0,66.98,long,stop_hit,3
+2,GLD,2025-08-23,2025-10-21,59,124816.0,66.98,long,stop_hit,2
+3,GLD,2025-08-21,2025-10-21,61,31301.0,17.0,long,stop_hit,1
+4,GLD,2026-01-03,2026-01-30,27,28602.0,5.93,long,stop_hit,1
+5,GLD,2026-01-04,2026-01-30,26,28436.0,5.93,long,stop_hit,2
+6,GLD,2026-01-05,2026-01-30,25,17704.0,3.61,long,stop_hit,3
+7,BTC-USD,2020-09-27,2020-11-26,60,17670.0,15.77,long,stop_hit,3
+8,QQQ,2023-05-06,2023-08-03,89,13598.0,8.94,long,stop_hit,3
+9,GLD,2025-10-31,2025-12-29,59,9377.0,1.99,long,stop_hit,1
+10,QQQ,2023-03-15,2023-08-03,141,8770.0,6.11,long,stop_hit,1
