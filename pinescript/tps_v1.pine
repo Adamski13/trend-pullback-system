@@ -1,0 +1,426 @@
+// =============================================================================
+// Trend Pullback System v1 (TPS v1)
+// Strategy: 200 SMA regime + 21 EMA pullback/reclaim entries
+//           Per-layer ATR trailing stops — max 3 pyramid layers
+//
+// Timeframe : Daily
+// Signals   : Generated on bar close
+// Execution : Next bar open (process_orders_on_close = false)
+//
+// Matches Python backtester logic exactly:
+//   - Entry on reclaim of 21 EMA after pullback below it (regime must be bullish)
+//   - Stop  = pullback_low − 0.5 × ATR(14)
+//   - Trail = highest_close_since_entry − 2.5 × ATR(14), ratchets up only
+//   - Each pyramid add requires a FRESH pullback + reclaim cycle
+//   - Regime break (close < 200 SMA) → close ALL layers immediately
+// =============================================================================
+
+//@version=6
+strategy(
+    title                   = "Trend Pullback System v1",
+    shorttitle              = "TPS v1",
+    overlay                 = true,
+    initial_capital         = 100000,
+    pyramiding              = 3,
+    process_orders_on_close = false,   // fill at next bar open — matches Python bt
+    calc_on_every_tick      = false,
+    commission_type         = strategy.commission.percent,
+    commission_value        = 0.0,
+    slippage                = 0
+)
+
+// ─────────────────────────────────────────────────────────────────────────────
+// INPUTS
+// ─────────────────────────────────────────────────────────────────────────────
+
+i_regime_len    = input.int  (200,  "Regime SMA length",                minval=50,  maxval=500,  group="Strategy")
+i_ema_len       = input.int  (21,   "Pullback EMA length",              minval=5,   maxval=100,  group="Strategy")
+i_atr_len       = input.int  (14,   "ATR length",                       minval=5,   maxval=50,   group="Strategy")
+i_stop_buf      = input.float(0.5,  "Stop buffer (ATR mult)",           minval=0.0, maxval=3.0,  step=0.1, group="Strategy")
+i_trail_mult    = input.float(2.5,  "Trail stop (ATR mult)",            minval=0.5, maxval=10.0, step=0.25, group="Strategy")
+i_max_layers    = input.int  (3,    "Max pyramid layers",               minval=1,   maxval=3,    group="Strategy")
+i_risk_pct      = input.float(1.0,  "Risk per layer (% of equity)",     minval=0.1, maxval=5.0,  step=0.1,  group="Sizing") / 100.0
+i_allow_shorts  = input.bool (false,"Allow short trades",                                         group="Strategy")
+
+// Sizing helpers (for instruments with non-1 point value or lot steps)
+i_point_value   = input.float(1.0,  "Point value (contract multiplier)", minval=0.000001, group="Sizing")
+i_qty_step      = input.float(1.0,  "Qty step (min lot)",                minval=0.000001, group="Sizing")
+i_max_qty       = input.float(1e6,  "Max qty clamp",                     minval=1,        group="Sizing")
+
+// ─────────────────────────────────────────────────────────────────────────────
+// HELPERS
+// ─────────────────────────────────────────────────────────────────────────────
+
+round_step(x, step) =>
+    step > 0.0 ? math.floor(x / step) * step : x
+
+calc_qty(entry_px, stop_px) =>
+    dist    = math.abs(entry_px - stop_px)
+    pv      = i_point_value > 0 ? i_point_value : 1.0
+    risk_$  = strategy.equity * i_risk_pct
+    raw     = dist > 0 ? (risk_$ / (dist * pv)) : 0.0
+    clamped = math.max(0.0, math.min(raw, i_max_qty))
+    stepped = round_step(clamped, i_qty_step)
+    stepped >= i_qty_step ? stepped : 0.0
+
+// ─────────────────────────────────────────────────────────────────────────────
+// CORE INDICATORS
+// ─────────────────────────────────────────────────────────────────────────────
+
+sma200 = ta.sma(close, i_regime_len)
+ema21  = ta.ema(close, i_ema_len)
+atr14  = ta.atr(i_atr_len)
+
+// ─────────────────────────────────────────────────────────────────────────────
+// REGIME
+// ─────────────────────────────────────────────────────────────────────────────
+
+regime_bull = close > sma200
+regime_bear = close < sma200
+
+// ─────────────────────────────────────────────────────────────────────────────
+// PULLBACK + RECLAIM STATE
+// ─────────────────────────────────────────────────────────────────────────────
+// was_below_long  : true once price dips below 21 EMA in a bull regime
+// pullback_low    : lowest low seen during that dip (stop reference)
+// Both reset when:
+//   (a) a reclaim entry fires   → fresh cycle required for next add
+//   (b) regime turns bearish    → cancel pending pullback
+// ─────────────────────────────────────────────────────────────────────────────
+
+var bool  was_below_long     = false
+var float pullback_low_long  = na
+
+var bool  was_above_short    = false
+var float pullback_high_short = na
+
+// Long pullback tracking
+if regime_bull
+    if close < ema21
+        was_below_long    := true
+        pullback_low_long := na(pullback_low_long) ? low : math.min(pullback_low_long, low)
+else
+    was_below_long    := false
+    pullback_low_long := na
+
+// Short pullback tracking
+if i_allow_shorts and regime_bear
+    if close > ema21
+        was_above_short       := true
+        pullback_high_short   := na(pullback_high_short) ? high : math.max(pullback_high_short, high)
+else
+    was_above_short       := false
+    pullback_high_short   := na
+
+// Reclaim conditions
+long_reclaim  = regime_bull and was_below_long  and close > ema21 and not na(pullback_low_long)
+short_reclaim = i_allow_shorts and regime_bear and was_above_short and close < ema21 and not na(pullback_high_short)
+
+// ─────────────────────────────────────────────────────────────────────────────
+// POSITION STATE
+// ─────────────────────────────────────────────────────────────────────────────
+
+pos_long  = strategy.position_size > 0
+pos_short = strategy.position_size < 0
+pos_flat  = strategy.position_size == 0
+
+var int layers_long  = 0
+var int layers_short = 0
+
+// Per-layer stops (initial + trailing ratchet)
+var float stop_L1 = na
+var float stop_L2 = na
+var float stop_L3 = na
+
+var float stop_S1 = na
+var float stop_S2 = na
+var float stop_S3 = na
+
+// Per-layer highest/lowest close since entry (for trailing)
+var float trail_hi_L1 = na
+var float trail_hi_L2 = na
+var float trail_hi_L3 = na
+
+var float trail_lo_S1 = na
+var float trail_lo_S2 = na
+var float trail_lo_S3 = na
+
+// Reset layer counters when flat
+if pos_flat
+    layers_long  := 0
+    layers_short := 0
+    stop_L1 := na;  stop_L2 := na;  stop_L3 := na
+    stop_S1 := na;  stop_S2 := na;  stop_S3 := na
+    trail_hi_L1 := na;  trail_hi_L2 := na;  trail_hi_L3 := na
+    trail_lo_S1 := na;  trail_lo_S2 := na;  trail_lo_S3 := na
+
+// ─────────────────────────────────────────────────────────────────────────────
+// LONG ENTRIES
+// ─────────────────────────────────────────────────────────────────────────────
+
+if long_reclaim and (pos_flat or pos_long) and layers_long < i_max_layers
+    stop_px  = pullback_low_long - i_stop_buf * atr14
+    entry_px = close                              // used only for qty calc; actual fill = next open
+    qty      = calc_qty(entry_px, stop_px)
+
+    if qty > 0
+        lnum = layers_long + 1
+        if lnum == 1
+            strategy.entry("L1", strategy.long, qty=qty)
+            stop_L1      := stop_px
+            trail_hi_L1  := close
+        else if lnum == 2
+            strategy.entry("L2", strategy.long, qty=qty)
+            stop_L2      := stop_px
+            trail_hi_L2  := close
+        else if lnum == 3
+            strategy.entry("L3", strategy.long, qty=qty)
+            stop_L3      := stop_px
+            trail_hi_L3  := close
+        layers_long += 1
+
+    // Reset pullback tracker — fresh dip required before next add
+    was_below_long    := false
+    pullback_low_long := na
+
+// ─────────────────────────────────────────────────────────────────────────────
+// SHORT ENTRIES (mirror)
+// ─────────────────────────────────────────────────────────────────────────────
+
+if short_reclaim and (pos_flat or pos_short) and layers_short < i_max_layers
+    stop_px  = pullback_high_short + i_stop_buf * atr14
+    entry_px = close
+    qty      = calc_qty(entry_px, stop_px)
+
+    if qty > 0
+        snum = layers_short + 1
+        if snum == 1
+            strategy.entry("S1", strategy.short, qty=qty)
+            stop_S1      := stop_px
+            trail_lo_S1  := close
+        else if snum == 2
+            strategy.entry("S2", strategy.short, qty=qty)
+            stop_S2      := stop_px
+            trail_lo_S2  := close
+        else if snum == 3
+            strategy.entry("S3", strategy.short, qty=qty)
+            stop_S3      := stop_px
+            trail_lo_S3  := close
+        layers_short += 1
+
+    was_above_short       := false
+    pullback_high_short   := na
+
+// ─────────────────────────────────────────────────────────────────────────────
+// TRAILING STOP UPDATES — ratchet only, per layer
+// Effective stop = max(initial_stop, highest_close − trail_mult × ATR)
+// ─────────────────────────────────────────────────────────────────────────────
+
+if pos_long
+    // Update highest close since entry
+    if not na(trail_hi_L1)  trail_hi_L1 := math.max(trail_hi_L1, close)
+    if not na(trail_hi_L2)  trail_hi_L2 := math.max(trail_hi_L2, close)
+    if not na(trail_hi_L3)  trail_hi_L3 := math.max(trail_hi_L3, close)
+
+    // Ratchet stops upward
+    if not na(stop_L1) and not na(trail_hi_L1)
+        stop_L1 := math.max(stop_L1, trail_hi_L1 - i_trail_mult * atr14)
+    if not na(stop_L2) and not na(trail_hi_L2)
+        stop_L2 := math.max(stop_L2, trail_hi_L2 - i_trail_mult * atr14)
+    if not na(stop_L3) and not na(trail_hi_L3)
+        stop_L3 := math.max(stop_L3, trail_hi_L3 - i_trail_mult * atr14)
+
+    // Apply exits — Pine replaces prior stop order each bar
+    if not na(stop_L1) and layers_long >= 1
+        strategy.exit("XL1", from_entry="L1", stop=stop_L1, comment="Trail L1")
+    if not na(stop_L2) and layers_long >= 2
+        strategy.exit("XL2", from_entry="L2", stop=stop_L2, comment="Trail L2")
+    if not na(stop_L3) and layers_long >= 3
+        strategy.exit("XL3", from_entry="L3", stop=stop_L3, comment="Trail L3")
+
+if pos_short
+    if not na(trail_lo_S1)  trail_lo_S1 := math.min(trail_lo_S1, close)
+    if not na(trail_lo_S2)  trail_lo_S2 := math.min(trail_lo_S2, close)
+    if not na(trail_lo_S3)  trail_lo_S3 := math.min(trail_lo_S3, close)
+
+    if not na(stop_S1) and not na(trail_lo_S1)
+        stop_S1 := math.min(stop_S1, trail_lo_S1 + i_trail_mult * atr14)
+    if not na(stop_S2) and not na(trail_lo_S2)
+        stop_S2 := math.min(stop_S2, trail_lo_S2 + i_trail_mult * atr14)
+    if not na(stop_S3) and not na(trail_lo_S3)
+        stop_S3 := math.min(stop_S3, trail_lo_S3 + i_trail_mult * atr14)
+
+    if not na(stop_S1) and layers_short >= 1
+        strategy.exit("XS1", from_entry="S1", stop=stop_S1, comment="Trail S1")
+    if not na(stop_S2) and layers_short >= 2
+        strategy.exit("XS2", from_entry="S2", stop=stop_S2, comment="Trail S2")
+    if not na(stop_S3) and layers_short >= 3
+        strategy.exit("XS3", from_entry="S3", stop=stop_S3, comment="Trail S3")
+
+// ─────────────────────────────────────────────────────────────────────────────
+// REGIME EXIT — close all layers immediately on regime break
+// ─────────────────────────────────────────────────────────────────────────────
+
+regime_broke_long  = pos_long  and not regime_bull
+regime_broke_short = pos_short and not regime_bear
+
+if regime_broke_long or regime_broke_short
+    strategy.close_all(comment="Regime break")
+
+// ─────────────────────────────────────────────────────────────────────────────
+// VISUALS — Indicators
+// ─────────────────────────────────────────────────────────────────────────────
+
+plot(sma200, "200 SMA",  color=color.new(color.blue,   0), linewidth=2)
+plot(ema21,  "21 EMA",   color=color.new(color.orange, 0), linewidth=1)
+
+// Regime background: soft green in bull, soft red in bear (shorts enabled only)
+bgcolor(
+    regime_bull                          ? color.new(color.green, 93) :
+    regime_bear and i_allow_shorts       ? color.new(color.red,   93) : na,
+    title="Regime background"
+)
+
+// ─────────────────────────────────────────────────────────────────────────────
+// VISUALS — Per-layer trailing stops (red dots/lines)
+// Only shown while the layer is active
+// ─────────────────────────────────────────────────────────────────────────────
+
+plot(pos_long and layers_long >= 1 and not na(stop_L1) ? stop_L1 : na,
+     "Stop L1", color=color.new(color.red, 20), linewidth=1,
+     style=plot.style_linebr)
+plot(pos_long and layers_long >= 2 and not na(stop_L2) ? stop_L2 : na,
+     "Stop L2", color=color.new(color.red, 45), linewidth=1,
+     style=plot.style_linebr)
+plot(pos_long and layers_long >= 3 and not na(stop_L3) ? stop_L3 : na,
+     "Stop L3", color=color.new(color.red, 60), linewidth=1,
+     style=plot.style_linebr)
+
+plot(pos_short and layers_short >= 1 and not na(stop_S1) ? stop_S1 : na,
+     "Stop S1", color=color.new(color.red, 20), linewidth=1,
+     style=plot.style_linebr)
+plot(pos_short and layers_short >= 2 and not na(stop_S2) ? stop_S2 : na,
+     "Stop S2", color=color.new(color.red, 45), linewidth=1,
+     style=plot.style_linebr)
+plot(pos_short and layers_short >= 3 and not na(stop_S3) ? stop_S3 : na,
+     "Stop S3", color=color.new(color.red, 60), linewidth=1,
+     style=plot.style_linebr)
+
+// Tightest active stop as a thicker line (most relevant stop to watch)
+tightest_long_stop =
+    pos_long and layers_long >= 3 and not na(stop_L3) ? math.max(stop_L1, math.max(stop_L2, stop_L3)) :
+    pos_long and layers_long >= 2 and not na(stop_L2) ? math.max(stop_L1, stop_L2) :
+    pos_long and layers_long >= 1 and not na(stop_L1) ? stop_L1 : na
+
+tightest_short_stop =
+    pos_short and layers_short >= 3 and not na(stop_S3) ? math.min(stop_S1, math.min(stop_S2, stop_S3)) :
+    pos_short and layers_short >= 2 and not na(stop_S2) ? math.min(stop_S1, stop_S2) :
+    pos_short and layers_short >= 1 and not na(stop_S1) ? stop_S1 : na
+
+plot(tightest_long_stop,  "Tightest Long Stop",  color=color.new(color.red, 0), linewidth=2, style=plot.style_circles)
+plot(tightest_short_stop, "Tightest Short Stop", color=color.new(color.red, 0), linewidth=2, style=plot.style_circles)
+
+// ─────────────────────────────────────────────────────────────────────────────
+// VISUALS — Entry + exit signals
+// ─────────────────────────────────────────────────────────────────────────────
+
+// Green triangle below bar on pullback reclaim (long entry signal)
+long_entry_signal = long_reclaim and (pos_flat or pos_long) and layers_long < i_max_layers
+plotshape(
+    series    = long_entry_signal,
+    title     = "Long Entry",
+    style     = shape.triangleup,
+    location  = location.belowbar,
+    color     = color.new(color.green, 0),
+    size      = size.small,
+    text      = "",
+    textcolor = color.white
+)
+
+// Short entry signal (only if shorts enabled)
+short_entry_signal = short_reclaim and (pos_flat or pos_short) and layers_short < i_max_layers
+plotshape(
+    series    = short_entry_signal,
+    title     = "Short Entry",
+    style     = shape.triangledown,
+    location  = location.abovebar,
+    color     = color.new(color.red, 0),
+    size      = size.small
+)
+
+// Red ✕ above bar on regime break exit
+plotshape(
+    series    = regime_broke_long or regime_broke_short,
+    title     = "Regime Break Exit",
+    style     = shape.xcross,
+    location  = location.abovebar,
+    color     = color.new(color.red, 0),
+    size      = size.normal,
+    text      = "REGIME",
+    textcolor = color.new(color.red, 0)
+)
+
+// Pullback active marker — small orange dot above EMA when tracking a dip
+plotshape(
+    series    = regime_bull and was_below_long and close < ema21,
+    title     = "Pullback active",
+    style     = shape.circle,
+    location  = location.belowbar,
+    color     = color.new(color.orange, 30),
+    size      = size.tiny
+)
+
+// ─────────────────────────────────────────────────────────────────────────────
+// INFO LABEL — last bar only
+// ─────────────────────────────────────────────────────────────────────────────
+
+var label lbl = na
+
+if barstate.islast
+    label.delete(lbl)
+
+    regime_str  = regime_bull ? "BULL ▲" : regime_bear ? "BEAR ▼" : "NEUTRAL"
+    pos_str     = pos_long    ? "LONG  (" + str.tostring(layers_long)  + " layer" + (layers_long  > 1 ? "s)" : ")") :
+                  pos_short   ? "SHORT (" + str.tostring(layers_short) + " layer" + (layers_short > 1 ? "s)" : ")") :
+                  "FLAT"
+    pb_str      = regime_bull and was_below_long  ? "Pullback active — waiting for reclaim" :
+                  regime_bull and not was_below_long ? "No pullback — watching for dip" :
+                  "N/A (not in bull regime)"
+    layers_str  = pos_long ? (
+        (layers_long >= 1 and not na(stop_L1) ? "  L1 stop: " + str.tostring(stop_L1, "#.##") + "\n" : "") +
+        (layers_long >= 2 and not na(stop_L2) ? "  L2 stop: " + str.tostring(stop_L2, "#.##") + "\n" : "") +
+        (layers_long >= 3 and not na(stop_L3) ? "  L3 stop: " + str.tostring(stop_L3, "#.##") + "\n" : "")
+        ) : ""
+
+    info = "TPS v1\n" +
+           "────────────────\n" +
+           "Regime:   " + regime_str  + "\n" +
+           "Position: " + pos_str     + "\n" +
+           "Pullback: " + pb_str      + "\n" +
+           "ATR(14):  " + str.tostring(atr14, "#.##") + "\n" +
+           "21 EMA:   " + str.tostring(ema21, "#.##") + "\n" +
+           "200 SMA:  " + str.tostring(sma200, "#.##") + "\n" +
+           (layers_str != "" ? "────────────────\n" + layers_str : "")
+
+    lbl := label.new(
+        x         = bar_index,
+        y         = high,
+        text      = info,
+        xloc      = xloc.bar_index,
+        yloc      = yloc.abovebar,
+        style     = label.style_label_lower_right,
+        color     = color.new(color.navy, 70),
+        textcolor = color.white,
+        size      = size.small
+    )
+
+// ─────────────────────────────────────────────────────────────────────────────
+// ALERTS
+// ─────────────────────────────────────────────────────────────────────────────
+
+alertcondition(long_entry_signal,           title="Long Entry — EMA Reclaim",  message="TPS v1 — Long entry signal on {{ticker}}. Pullback reclaimed 21 EMA in bull regime.")
+alertcondition(short_entry_signal,          title="Short Entry — EMA Reclaim", message="TPS v1 — Short entry signal on {{ticker}}. Rally reclaimed 21 EMA in bear regime.")
+alertcondition(regime_broke_long,           title="Regime Break — Exit Longs",  message="TPS v1 — Regime break on {{ticker}}. Close below 200 SMA. All long layers closed.")
+alertcondition(regime_broke_short,          title="Regime Break — Exit Shorts", message="TPS v1 — Regime break on {{ticker}}. Close above 200 SMA. All short layers closed.")
+alertcondition(regime_bull and was_below_long and close < ema21,
+                                            title="Pullback Active",            message="TPS v1 — Pullback below 21 EMA active on {{ticker}}. Watching for reclaim.")
