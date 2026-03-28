@@ -13,7 +13,7 @@ instruments:
   - symbol: XAU_USD
     label: Gold
     weight: 0.333
-  - symbol: US100_USD
+  - symbol: NAS100_USD
     label: Nasdaq 100
     weight: 0.333
   - symbol: BTC_USD
