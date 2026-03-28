@@ -1,0 +1,58 @@
+# TPS v2 Signal Generator — OANDA Configuration
+#
+# Instruments are OANDA instrument codes (underscore format).
+# Verify your broker's exact codes at:
+#   https://developer.oanda.com/rest-live-v20/instrument-df/
+#
+# Common codes:
+#   Gold:      XAU_USD
+#   Nasdaq:    NAS100_USD  (some accounts: US100_USD)
+#   Bitcoin:   BTC_USD
+
+instruments:
+  - symbol: XAU_USD
+    label: Gold
+    weight: 0.333
+  - symbol: NAS100_USD
+    label: Nasdaq 100
+    weight: 0.333
+  - symbol: BTC_USD
+    label: Bitcoin
+    weight: 0.334
+
+# EWMAC signal parameters — do not change
+ewmac:
+  variations:
+    - [8, 32]
+    - [16, 64]
+    - [32, 128]
+  forecast_scalars:
+    "8_32":   10.6
+    "16_64":   7.5
+    "32_128":  5.3
+  forecast_weights:
+    "8_32":   0.333
+    "16_64":  0.334
+    "32_128": 0.333
+  forecast_div_multiplier: 1.15
+
+forecast:
+  cap:   20.0
+  floor:  0.0
+
+regime:
+  sma_period: 200
+  enabled: true
+
+# Sizing — vol_target and IDM are the levers you control
+sizing:
+  vol_target_pct: 0.20          # 20% annual portfolio vol target
+  instrument_div_multiplier: 1.5  # IDM for 3 moderately correlated instruments
+  vol_lookback_days: 25
+
+buffering:
+  threshold_fraction: 0.30      # only trade when delta > 30% of avg position
+
+data:
+  candle_count: 400             # daily bars (must be > 200 + warmup)
+  granularity: D
