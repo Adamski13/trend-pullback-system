@@ -10,3 +10,7 @@ build/
 .env
 venv/
 .venv/
+tps_v2_signal_gen/equity_log.csv
+tps_v2_signal_gen/state.json
+tps_v2_signal_gen/state/
+tps_v2_signal_gen/cron.log
