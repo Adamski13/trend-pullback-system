@@ -97,14 +97,12 @@ OANDA instrument codes use underscore format. Common examples:
 |--------|-----------|
 | Gold | `XAU_USD` |
 | Silver | `XAG_USD` |
-| Nasdaq 100 | `NAS100_USD` |
+| Nasdaq 100 | `US100_USD` |
 | S&P 500 | `SPX500_USD` |
 | Bitcoin | `BTC_USD` |
 | Ethereum | `ETH_USD` |
 | Crude Oil | `WTICO_USD` |
 
-> **Note:** Some accounts use `US100_USD` instead of `NAS100_USD` for Nasdaq.
-> Check your available instruments in the OANDA platform.
 
 ### Instrument Weights
 
