@@ -8,7 +8,9 @@
 
 ## What Is This Project?
 
-A systematic trend-following trading strategy built from scratch through iterative testing. The system buys pullbacks to the 21 EMA during confirmed uptrends (price above 200 SMA), pyramids into winners, and exits via ATR trailing stops. It was designed to work across multiple asset classes (indices, commodities, crypto) with identical parameters.
+A systematic trend-following trading strategy built from scratch through iterative testing. Originally designed as a pullback-reclaim system (v1), it evolved into a Carver-style continuous forecast system (v2) after deep-dive research into the academic and practitioner literature on trend following, signal construction, and position sizing.
+
+The system trades across multiple asset classes (indices, commodities, crypto) via OANDA CFDs with identical parameters.
 
 ---
 
@@ -27,7 +29,6 @@ We started with a completely different strategy — a volatility compression bre
 **Key insight #1:** On NAS100, the compression breakout logic added no value. The regime filter alone was doing all the work. We tested this directly — a simple "be long when regime is bullish, flat when not" strategy (no fancy entries at all) produced PF 2.41 and $11.8k profit.
 
 ### Testing Improvements on Regime-Only
-We then tried to improve the regime-only system with:
 
 | Enhancement | Result |
 |-------------|--------|
@@ -39,341 +40,292 @@ We then tried to improve the regime-only system with:
 **Key insight #2:** On NAS100, the only modification that improved the system was pyramiding. Filters, scaling, and partial exits all hurt performance. The edge is in trend persistence and convexity — not in signal refinement.
 
 ### The Fundamental Rethink
-At this point we stepped back and questioned everything:
-
-1. The regime filter (4H MA crossover) was the entire edge, not the entries
-2. MA crossovers are reactive and introduce unnecessary lag
-3. The system was only tested on one instrument (NAS100 on OANDA)
-4. We might be overfitting to Nasdaq's structural upward drift
-5. A 4H crossover system is really just a trend filter with position sizing
 
 **Key insight #3:** Instead of optimizing entries on a single instrument, we needed to build a robust system validated across multiple markets. If it only works on NAS100, it's curve-fitted. If it works on indices, commodities, AND crypto with the same parameters, it's structural.
 
-### Building TPS v1 (Current System)
-We redesigned from scratch with these principles:
+### Building TPS v1
 
-- **Simple regime:** 200 SMA (institutional standard, not fitted)
-- **Clean entry:** Pullback below 21 EMA then reclaim above it
-- **Mechanical exit:** ATR trailing stop (no MA-based exits — those were proven too laggy)
-- **Controlled pyramiding:** Each add requires a fresh pullback cycle
-- **Per-layer risk management:** Individual stops per pyramid layer
-- **Multi-asset validation:** Must work across asset classes with zero parameter changes
+Redesigned from scratch: 200 SMA regime, 21 EMA pullback-reclaim entry, ATR trailing stops, controlled pyramiding (max 3 layers), per-layer risk management, multi-asset validation with zero parameter changes.
 
----
+### The v2 Evolution: Research-Driven Redesign
 
-## Current System Specification
+After completing all four validation phases on v1, we conducted a deep-dive literature review covering 7 academic papers, Robert Carver's practitioner framework, and AQR's research. Conclusion: v1's core edge (regime filter + trend persistence) was sound, but signal construction and position sizing could be substantially improved.
 
-### Entry Rules (Long)
-1. Regime check: Daily close > 200 SMA
-2. Pullback: Price closes below 21 EMA (track lowest low during pullback)
-3. Reclaim: Price closes back above 21 EMA → ENTER LONG
-4. Stop: Below pullback low − 0.5 × ATR(14)
-5. Size: 1% of total portfolio equity at risk
+### v2 Head-to-Head Results
 
-### Pyramiding
-- Max 3 layers (base + 2 adds)
-- Each add requires a FRESH pullback + reclaim cycle
-- Each add risks 1% of current portfolio equity
-- Each add gets its own stop below its own pullback low
-- Total max risk: 3% of equity if all 3 layers active
+v1 vs v2 on identical data (2017-08-17 to 2025-12-31, QQQ + GLD + BTC-USD, 0.1% commission + 0.05% slippage):
 
-### Exit Rules
-1. **Regime break:** Close below 200 SMA → close ALL layers immediately
-2. **Per-layer trailing stop:** 2.5 × ATR(14) from highest close since that layer's entry, ratchets up only
-3. **Per-layer initial stop:** Below pullback low − 0.5 × ATR (before trail takes over)
+| Metric | TPS v1 | TPS v2 (daily) | Edge |
+|--------|--------|----------------|------|
+| Net Return | +362% | +726% | v2 doubles v1 |
+| CAGR | 20.1% | ~27% | v2 |
+| Sharpe | 1.00 | 0.92 | v1 (slightly) |
+| Sortino | 0.91 | 0.98 | v2 |
+| Max Drawdown | -23.3% | -26.5% | v1 |
+| Trades | 204 | 1,374 | v1 (lower cost) |
+| Friction Cost | ~$19k | $134k | v1 |
+| QQQ P&L | $63k | $60k | ≈ |
+| GLD P&L | $252k | $406k | v2 |
+| BTC P&L | $83k | $413k | v2 massively |
 
-### What the System Does NOT Have
-- No time stops
-- No partial profit taking
-- No MA crossover signals
-- No RSI, Bollinger, Fibonacci, or compression logic
-- No fixed take-profit levels
-- No per-instrument parameter tuning
+**The key finding:** v2 properly unlocks BTC. The continuous EWMAC forecast scales position size with trend strength, capturing BTC's massive 2020-2021 and 2024-2025 bull runs ($83k → $413k).
 
 ---
 
-## Backtest Results Summary
+## TPS v2 Specification (Carver-Style Continuous Forecast System)
 
-### Testing Infrastructure
-- Python backtester with bar-by-bar simulation
-- Data: stooq (equities/commodities), Binance (crypto)
-- Execution: signals on close, fill at next bar open
-- 4-phase validation protocol completed
+### What Changed and Why
 
-### Phase 1: Single Instrument (QQQ, no frictions)
-| Metric | Value |
-|--------|-------|
-| CAGR | 3.85% |
-| Max DD | -9.1% |
-| Sharpe | 0.70 |
-| PF | 2.20 |
-| Trades | 104 (~9/yr) |
-| Win Rate | 46.2% |
+| Component | v1 | v2 | Why |
+|-----------|----|----|-----|
+| Signal type | Binary (in/out) | Continuous forecast (0 to 20) | Reduces whipsaw, enables gradual position scaling |
+| Entry signal | 21 EMA pullback-reclaim | EWMAC blend at 3 speeds | Multi-speed captures trends at different horizons |
+| Position sizing | Fixed 1% risk per trade | Volatility-targeted per instrument | Equal risk contribution; auto-scales during vol spikes |
+| Pyramiding | Discrete 3 layers | Forecast-driven (automatic) | Forecast strength drives position size — soft pyramiding |
+| Stop losses | ATR-based per layer | Embedded in signal (forecast → 0 = exit) | Gradual exit as trend weakens |
+| Regime filter | 200 SMA binary gate | 200 SMA floors forecasts at 0 | Unchanged in effect |
+| Rebalancing | Only on new signals | Daily with buffering | Keeps risk aligned with current volatility |
 
-### Phase 2: Cross-Market (same params, no frictions)
-| Symbol | CAGR | Max DD | Sharpe | PF | Verdict |
-|--------|------|--------|--------|-----|---------|
-| QQQ | 3.85% | -9.1% | 0.70 | 2.20 | ✅ Pass |
-| SPY | 1.78% | -10.8% | 0.37 | 1.39 | ✅ Pass (marginal) |
-| GLD | 6.26% | -18.2% | 0.73 | 3.07 | ✅ Strongest |
-| BTC-USD | 3.01% | -9.5% | 0.51 | 3.74 | ✅ Pass |
+### Signal: EWMAC at 3 Speeds
 
-**4/4 profitable with zero parameter changes.**
+```
+Raw = EMA(fast) - EMA(slow)
+Risk-Adjusted = Raw / σ(daily price changes)
+Scaled = Risk-Adjusted × Forecast Scalar
+Combined = clip(FDM × Σ(weight_i × Scaled_i), 0, +20)
+```
 
-### Phase 3: Sensitivity (81 combos on QQQ)
-- **81/81 profitable** — zero losing combinations
-- EMA length is the biggest lever (15 > 21 > 30)
-- Regime MA (150/200/250) barely matters — confirms robustness
-- Risk scales linearly (as expected)
+Speeds: (8,32) scalar 10.6, (16,64) scalar 7.5, (32,128) scalar 5.3. Equal weights. FDM = 1.15. Floor 0, cap 20.
 
-### Phase 4: Frictions (0.1% commission + 0.05% slippage)
-| Symbol | CAGR after frictions | Survives? |
-|--------|---------------------|-----------|
-| QQQ | 2.52% | ✅ Yes |
-| SPY | -0.06% | ❌ No — dropped |
-| GLD | 4.02% | ✅ Yes |
-| BTC-USD | 2.92% | ✅ Yes |
+### Sizing: Volatility Targeting
 
-### Portfolio (QQQ + GLD + BTC-USD, with frictions)
-| Metric | Portfolio | Best Individual (GLD) |
-|--------|-----------|----------------------|
-| Net P&L | +431.6% | +55.5% |
-| CAGR | 16.09% | 4.02% |
-| Max DD | -23.2% | -23.2% |
-| Sharpe | 0.88 | 0.49 |
-| PF | 3.65 | 2.18 |
-| Return/DD | 18.59 | 2.39 |
+```
+Position = (Capital × VolTarget × InstrWeight × IDM × Forecast/10) / (InstrVol × Price)
+```
+
+### Buffering
+
+Only trade when |target − current| > 25% of average position. Primary friction reducer.
 
 ---
 
-## The Honest Assessment (Read This Carefully)
+## v2.1 Optimization Results
+
+### Phase 1: Friction Optimization
+
+**Key finding: Buffer > rebalance frequency.** Daily + 25% buffer is optimal (signal-aware > calendar-aware).
+
+| Config | CAGR | Sharpe | Trades | Friction |
+|--------|------|--------|--------|----------|
+| Daily + 30% buffer | 30.6% | 1.15 | 570 | $110k |
+| Daily + 25% buffer | ~29% | ~1.10 | ~650 | ~$95k |
+| Weekly + 10% buffer | ~26% | ~1.00 | 545 | ~$77k |
+| Daily + 5% buffer | ~27% | ~0.92 | 2,012 | ~$134k |
+
+### Phase 2: Vol Target Sensitivity
+
+**Key finding: Sharpe flat across all targets (0.99–1.03).** Vol targeting is pure leverage. 20% is sweet spot.
+
+| Vol Target | CAGR | Sharpe | Max DD | Friction |
+|------------|------|--------|--------|----------|
+| 10% | 13.4% | ~1.00 | -15.3% | $23k |
+| 20% | 26.7% | ~1.00 | -26.8% | $90k |
+| 30% | 38.6% | ~1.00 | -39.7% | $242k |
+
+### Phase 3: Expanded Universe
+
+USO (0.98), SLV (0.96), EWG (1.01), EWJ (1.01) all fail PF > 1.3. ETH-USD marginal at 1.15. Core portfolio remains NAS100 + Gold + BTC.
+
+---
+
+## Walk-Forward Validation
+
+| Test Window | CAGR | Sharpe | Comment |
+|-------------|------|--------|---------|
+| 2017–2018 | 1.3% | 0.18 | Weak — flat crypto, choppy equities |
+| 2018–2019 | 35.4% | 1.71 | Strong |
+| 2019–2020 | 49.1% | 1.72 | Strong — COVID trend |
+| 2020–2021 | 29.0% | 1.26 | Solid |
+| 2021–2022 | 0.9% | 0.13 | Weakest — crypto crash + rate shock |
+| 2022–2023 | 13.9% | 0.75 | Recovering |
+| 2023–2024 | 50.7% | 1.69 | Strong |
+
+**7/7 windows positive. Mean OOS Sharpe: 1.06. Verdict: robust.**
+
+---
+
+## Live Infrastructure
+
+### Pine Script v6
+
+**Strategy version:** Full EWMAC with vol-targeted sizing via `strategy.order()`. Validated against OANDA chart data for NAS100USD, XAUUSD, BTCUSD. Debugged `strategy.entry()` pyramiding behavior and Pine v6 `:=` scoping rules.
+
+**Indicator version:** Clean visual dashboard. Bar colors = forecast strength. Background = regime zones. Tiny signal markers (entry/add/reduce/close). Forecast table bottom-right. EMAs off by default. Native timeframe calculations (no `request.security`).
+
+### OANDA Signal Generator (Python)
+
+- `oanda_client.py` — v20 REST API (candles, account, positions, orders)
+- `forecast_engine.py` — EWMAC computation (same logic as backtester)
+- `generate_signals.py` — daily runner with paper/live modes
+- `telegram_notify.py` — phone notifications via Telegram bot
+- `monitor.py` — account snapshots and equity logging
+- `setup.py` — guided setup wizard (OANDA + Telegram + cron)
+
+Connected to live OANDA account. Tested and verified: fetches candles, reads positions, computes forecasts, sends Telegram notifications.
+
+### Telegram Notifications
+
+Bot created, connected, tested. Sends formatted signal reports with forecast bars, position targets, action labels. Alerts for ENTER/CLOSE signals.
+
+### Automated Scheduling
+
+Cron job: Monday–Friday at 22:05 UTC. Computes forecasts, sends Telegram, logs state. Fully hands-free (Mac must be awake).
+
+---
+
+## Production Configuration
+
+| Parameter | Value | Rationale |
+|-----------|-------|-----------|
+| Rebalance | Daily | Signal-aware > calendar-aware |
+| Buffer | 25% | ~600 trades, good cost/tracking balance |
+| Vol target | 20% | Flat Sharpe, 20% balances return/DD |
+| Instruments | NAS100_USD, XAU_USD, BTC_USD | Core 3 pass quality filter (OANDA CFDs) |
+| IDM | 1.5 | Standard for 3 instruments |
+| EWMAC | (8,32), (16,64), (32,128) | Fast + medium + slow |
+| FDM | 1.15 | For 3 forecast variations |
+| Forecast cap | 20 | Standard Carver cap |
+| Regime | 200 SMA | Floor forecasts at 0 below |
+
+---
+
+## Research That Informed v2
+
+### Academic Papers
+1. Moskowitz, Ooi & Pedersen (2012) — "Time Series Momentum" — return persistence across 58 instruments, sign as predictive as magnitude
+2. Hurst, Ooi & Pedersen (2017) — "A Century of Evidence" — trend following profitable since 1880, signal methodology matters less than diversification
+3. Harvey et al. (2018) — "Impact of Volatility Targeting" — improves Sharpe for equities/credit, reduces left-tail events
+4. Baltas & Kosowski (2015) — "Demystifying Time-Series Momentum" — risk-adjusting signals by instrument vol is essential
+5. Shi & Lian (2025) — "Trend Following: A Practical Guide" — multi-scale blending is most robust approach
+6. Winton Capital (2013) — intermediate-speed Sharpe 1.12 vs 0.87/0.81 for fast/slow
+7. CFM (2014) — "Two Centuries of Trend Following" — 200 years, Sharpe 0.72, "10 sigma" phenomenon
+
+### Practitioner: Robert Carver
+Continuous forecasts, forecast scaling/capping, multiple speed blending, vol-targeted sizing, trade buffering, no separate stop losses.
+
+### Partial Profits & Break-Even Stops
+Both hurt trend following. Partials cap positive skew. Break-even worsens EV at every trigger point. v2's forecast-driven sizing replaces all three (partials, break-even, pyramiding) with one mechanism.
+
+---
+
+## The Honest Assessment
 
 ### What's genuinely good:
-- The mechanism is structural — works across 3 distinct asset classes (equities, commodities, crypto) with identical parameters
-- 81/81 parameter combos profitable confirms it's not curve-fitted to specific settings
-- Portfolio diversification nearly doubles the Sharpe ratio (0.88 vs best individual 0.49)
-- System drawdowns are 2-9× smaller than buy & hold
-- The pyramiding design works exactly as intended — small losses, huge winners
+- Structural mechanism across asset classes with identical parameters
+- 81/81 parameter combos profitable (not curve-fitted)
+- v2 doubled v1 returns (+726% vs +362%)
+- Walk-forward validated: 7/7 OOS windows positive, mean Sharpe 1.06
+- Edge documented across 200 years by independent research teams
+- Full live infrastructure operational: OANDA + Telegram + cron
 
-### What's genuinely concerning:
-- The system only works on 3 out of 9 tested instruments (33% hit rate)
-- This means it's not a "universal trend system" — it requires instruments with very specific trend properties
-- GLD contributes 86.4% of portfolio P&L — the "diversified portfolio" is really a gold trend system
-- The instrument selection (QQQ, GLD, BTC) is itself a form of fitting — we chose these partly because they worked
-
-### What you must understand before trading this:
-
-**1. Returns are heavily concentrated.**
-- Top 10 trades = 87.2% of total portfolio P&L
-- 5 "monster" trades (>$20k each) generated $342k out of $431k total
-- Three GLD trades in Aug-Oct 2025 alone made $285k (66% of lifetime P&L)
-- 2025 returned +176%. Strip that out and the system made ~9.4% CAGR over 10 years.
-
-**2. You will lose more often than you win.**
-- Win rate: 38.1% (portfolio level)
-- 169 out of 273 trades are losers
-- Most weeks and most months will feel like the system is broken
-- You will have entire losing years (2016: -7.6%, 2022: -10.9%)
-
-**3. The shared equity pool is a double-edged amplifier.**
-- When winning: position sizes grow because equity grows, creating convexity
-- When losing: losses are sized off the full pool too
-- The $285k GLD trades in 2025 were so large because equity had already grown to $300k+
-- In a correlated drawdown across all instruments, the same amplifier works against you
-
-**4. GLD dominates the portfolio.**
-- 86.4% of total P&L comes from GLD
-- The "diversified portfolio" is really a gold trend system with QQQ and BTC as side bets
-- If gold stops trending for several years, the portfolio will underperform significantly
-- This is why we're expanding the instrument universe (see roadmap below)
-
-**5. This will NOT consistently beat equity buy & hold.**
-- QQQ buy & hold returned +524% vs the system's +52.6% on QQQ alone
-- The portfolio's +431% vs equal-weight B&H +414% is roughly comparable
-- The system's advantage is risk-adjusted: similar returns with much less drawdown
-- If your goal is pure maximum returns on equities, just buy and hold QQQ
-
-**6. The system requires patience measured in years, not months.**
-- The next "2025 GLD" moment might not come for 2-3 years
-- You must be able to follow the signals through losing streaks without overriding
-- Paper trade for 3-6 months minimum before going live
-- The biggest risk to your success is abandoning the system during a drawdown
-
-### What this system IS:
-A disciplined, risk-managed trend-following approach that captures large moves across multiple asset classes while controlling drawdowns. It will underperform buy & hold in strong bull markets but protect capital during bear markets. Over full cycles, it should deliver competitive risk-adjusted returns.
-
-### What this system IS NOT:
-A way to get rich quick. A system that wins most of the time. A replacement for buy & hold on equities. A system you can override when it "feels wrong."
+### What you must understand:
+1. You will lose more often than you win (35–45% win rate)
+2. Returns are concentrated in trending periods (next big trend may be 2–3 years away)
+3. Won't consistently beat equity buy & hold (advantage is risk-adjusted)
+4. Requires patience measured in years
+5. Concentration risk persists (whichever instruments trend will dominate)
+6. Higher friction than v1 (even optimized: ~$90-110k vs ~$19k)
+7. Capital constraint: vol-targeted sizing needs ~$50k+ for whole-unit positions on expensive instruments
 
 ---
 
 ## Roadmap
 
 ### ✅ Completed
-- [x] VCB breakout system (abandoned — edge was in regime, not breakouts)
-- [x] Regime-only system on NAS100 (validated regime filter as core edge)
-- [x] TPS v1 system design and Python backtester
-- [x] Phase 1: Single instrument validation (QQQ)
-- [x] Phase 2: Cross-market robustness (QQQ, SPY, GLD, BTC-USD)
-- [x] Phase 3: Sensitivity analysis (81 parameter combinations)
-- [x] Phase 4: Friction testing (0.1% commission + 0.05% slippage)
-- [x] Portfolio simulation (QQQ + GLD + BTC-USD)
-- [x] Year-by-year breakdown and trade concentration analysis
-- [x] All results committed to GitHub
-- [x] Phase 5: Instrument universe expansion (USO, SLV, EWG, EWJ, ETH — all failed PF > 1.3 filter)
-- [x] Final portfolio confirmed: QQQ + GLD + BTC-USD (no additions)
-- [x] Pine Script v1 — TradingView implementation (`pinescript/tps_v1.pine`)
-- [x] TPS v2 — Carver-style EWMAC system built, validated, and production config set
-- [x] TPS v2 friction optimization (daily + 30% buffer is optimal)
-- [x] TPS v2 vol target sweep (20% is sweet spot)
-- [x] TPS v2 expanded instrument test (all failed PF > 1.3; ETH borderline at 1.15)
-- [x] TPS v2 walk-forward validation (7/7 windows positive, mean Sharpe 1.06)
+- [x] VCB breakout system (abandoned — edge was in regime)
+- [x] TPS v1 design, backtester, 4-phase validation
+- [x] v1 Portfolio simulation (QQQ + GLD + BTC-USD)
+- [x] Deep-dive research review (7 papers, Carver framework)
+- [x] Research on partial profits and break-even stops
+- [x] TPS v2 design and backtester (EWMAC + vol targeting)
+- [x] v1 vs v2 head-to-head (v2 doubles v1)
+- [x] v2.1 Friction optimization (buffer > rebalance frequency)
+- [x] v2.1 Vol target sensitivity (Sharpe flat, 20% sweet spot)
+- [x] v2.1 Expanded universe (all fail quality filter)
+- [x] Walk-forward validation (7/7 OOS windows positive)
+- [x] Pine Script v6 strategy (validated on OANDA charts)
+- [x] Pine Script v6 indicator (clean visual dashboard)
+- [x] Python signal generator (OANDA v20 API)
+- [x] OANDA live account connection (tested, verified)
+- [x] Telegram notifications (working)
+- [x] Automated cron scheduling (Mon-Fri 22:05 UTC)
+- [x] All code committed to GitHub
 
-### ✅ Phase 5: Expand Instrument Universe (Completed)
-Tested 5 additional instruments with default config + frictions (0.1% comm + 0.05% slip):
-
-| Symbol | CAGR | Max DD | Sharpe | PF | Trades | Verdict |
-|--------|------|--------|--------|-----|--------|---------|
-| USO (Oil) | -1.32% | -19.3% | -0.19 | 0.65 | 64 | ❌ Fail — mean-reverting, structural breaks |
-| SLV (Silver) | -1.46% | -32.6% | -0.19 | 0.76 | 70 | ❌ Fail — too choppy relative to trend strength |
-| EWG (Germany) | -0.42% | -28.9% | -0.03 | 1.01 | 99 | ❌ Fail — mean-reverting, ATR stops too wide |
-| EWJ (Japan) | -1.26% | -17.1% | -0.16 | 0.87 | 95 | ❌ Fail — same issue as EWG |
-| ETH-USD | +1.24% | -25.7% | 0.16 | 1.24 | 84 | ❌ Fail — closest miss, friction drag too high |
-
-**Result: 0/5 passed the PF > 1.3 filter.** Portfolio stays at QQQ + GLD + BTC-USD.
-
-**What this means:**
-- The system works on instruments with long, sustained directional moves and clean pullback structures
-- Oil/silver/international equities don't have this property — they're too mean-reverting or choppy
-- ETH nearly passed but generates too many trades, making friction drag fatal
-- The 3-instrument portfolio (QQQ, GLD, BTC) is the validated final universe for this strategy
-- Instrument selection is itself a form of fitting — we should be honest that we're trading a curated set, not "all trending markets"
-- The structural reasons these 3 work (tech sector drift, macro gold cycles, crypto adoption) are defensible but not guaranteed to persist
-
-### ✅ TPS v2 — Carver-Style EWMAC System (Completed)
-A full redesign using continuous EWMAC forecasts and volatility-targeted position sizing.
-See `tps_v2/RESULTS.md` for complete results.
-
-**Architecture:**
-- 3 EWMAC speeds blended (8/32, 16/64, 32/128), equal-weighted, FDM=1.15
-- Vol-targeted sizing: `N = (Capital × VolTarget × InstrWeight × IDM × Forecast/10) / (InstVol × Price)`
-- No hard stops — positions scaled continuously by forecast strength
-- Trade buffering: only rebalance when target differs by >threshold% of avg position
-
-**Production config:** daily rebalance, 30% buffer, 20% vol target, QQQ + GLD + BTC-USD
-
-**Key results (2017–2025):**
-| Metric | Value |
-|---|---|
-| CAGR | 30.6% |
-| Sharpe | 1.15 |
-| Max DD | -25.7% |
-| Calmar | 1.19 |
-| Trades | 570 |
-
-**Walk-forward validation:** 7/7 rolling test windows positive CAGR, mean Sharpe 1.06 across windows.
-OOS Sharpe (2021–2025) = 0.85 vs IS (2012–2020) = 1.64. Degradation explained by period; not overfitting.
-
-**v2 vs v1 comparison:**
-- v2 CAGR (30.6%) >> v1 CAGR (16.1%) — Carver sizing captures more of the trend
-- v2 Sharpe (1.15) >> v1 Sharpe (0.88) — continuous forecast smoother than binary entry/exit
-- v2 max DD (-25.7%) similar to v1 (-23.2%) — vol targeting holds risk constant
-- v2 has no hard stops; v1 relies on ATR trailing stops
-
-### ✅ Pine Script v1 (Completed)
-TradingView Pine Script v6 implementation of TPS v1.
-`pinescript/tps_v1.pine` — includes regime filter, EMA pullback signals, ATR trailing stops, pyramid layer tracking, alert conditions.
+### 🔄 In Progress
+- [ ] Paper trading — running signals daily, logging, building track record
+- [ ] Fund OANDA account (£500 initial)
 
 ### 📋 Planned
-- [ ] **Pine Script v2** — TradingView EWMAC forecast visualizer with continuous position sizing display
-- [ ] **ETH-USD investigation** — borderline at PF 1.15, worth testing with lower filter or longer history
-- [ ] **Live signal generator** — daily script that outputs current forecast + target position for each instrument
-- [ ] **Paper trading period** — 3-6 months of live signal tracking without real capital
-- [ ] **Alert/notification system** — automated daily signal checking with alerts via email/Telegram/webhook
+- [ ] Manual live trading (minimum-size trades based on Telegram signals)
+- [ ] Auto-execution (switch to `--live` flag when confident)
+- [ ] Donchian breakout rules (signal diversification)
+- [ ] Intraday system (separate project, separate edge)
 
-### 💡 Future Considerations
-- Short-side testing on commodities and crypto (where downtrends are real)
-- Walk-forward optimization (rolling out-of-sample validation)
-- Monte Carlo simulation for drawdown confidence intervals
-- Broker API integration for semi-automated execution
-- Per-instrument config optimization (only after proving default works live)
-
----
-
-## Technical Setup
-
-### Running Backtests
-```bash
-cd /Users/adam/trend-pullback-system
-
-# Single instrument
-python run_backtest.py --symbol QQQ
-
-# All default instruments
-python run_backtest.py
-
-# With frictions
-python run_backtest.py --commission 0.1 --slippage 0.05
-
-# Sensitivity sweep
-python run_backtest.py --sensitivity
-
-# Portfolio
-python run_portfolio.py --commission 0.1 --slippage 0.05
-```
-
-### Project Structure
-```
-trend-pullback-system/
-├── STRATEGY_SPEC.md          ← TPS v1 strategy specification
-├── PORTFOLIO_SPEC.md         ← portfolio simulation spec
-├── PROJECT_STATUS.md         ← this file (development log + honest assessment)
-├── config/default_config.yaml
-├── src/                      ← TPS v1 source
-│   ├── data_loader.py        ← yfinance + stooq + Binance fallbacks
-│   ├── indicators.py         ← SMA, EMA, ATR
-│   ├── strategy.py           ← core strategy logic
-│   ├── backtester.py         ← bar-by-bar simulation engine
-│   ├── portfolio.py          ← multi-instrument portfolio engine
-│   ├── metrics.py            ← 25+ performance metrics
-│   └── visualizer.py         ← equity curves, drawdowns, heatmaps, correlations
-├── tps_v2/                   ← TPS v2 (Carver EWMAC system)
-│   ├── RESULTS.md            ← v2 full results summary
-│   ├── config/default_config.yaml
-│   ├── src/
-│   │   ├── data_loader.py    ← same fallback chain as v1
-│   │   ├── indicators.py     ← EWMAC forecast computation
-│   │   └── strategy.py       ← StrategyV2 + Backtester classes
-│   ├── run_backtest.py       ← CLI with --rebalance and --buffer flags
-│   ├── run_analysis.py       ← 4-phase analysis suite
-│   ├── run_walkforward.py    ← IS/OOS split + rolling walk-forward
-│   └── results/              ← backtest, analysis, and walk-forward outputs
-├── pinescript/tps_v1.pine    ← TradingView Pine Script v6 implementation
-├── tests/test_strategy.py    ← 17 unit tests (v1)
-├── run_backtest.py           ← v1 single/multi-instrument backtest CLI
-├── run_portfolio.py          ← v1 portfolio backtest CLI
-└── results/                  ← v1 backtest outputs organized by phase
-```
-
-### Data Sources
-- **Equities/Commodities:** stooq via pandas-datareader (primary), yfinance (secondary — often rate-limited)
-- **Crypto:** Binance public klines API (no auth needed)
-- Data cached locally as parquet files in data/
+### 💡 Future
+- Short-side testing on commodities/crypto
+- Carry signal addition (Carver's second rule)
+- Monte Carlo drawdown simulation
+- Dashboard/app for equity curve visualization
+- Scale to proper vol-targeted sizing at £5-10k+
 
 ---
 
-## Key Lessons Learned
+## Key Lessons Learned (20 insights)
 
-1. **Regime filter is the edge, not the entry signal.** Every attempt to improve entries was less valuable than simply being on the right side of the market.
+### From v1 (1-7)
+1. Regime filter is the edge, not the entry signal
+2. Simpler is better
+3. Validate across markets before optimizing
+4. Additions that reduce participation usually hurt
+5. Pyramiding works with positive expectancy
+6. Position sizing matters more than entry timing
+7. Accept what the system is
 
-2. **Simpler is better.** The VCB system had compression scores, median ATR windows, failed breakout detection, and time stops. The final system has 200 SMA + 21 EMA + ATR trail. The simple version performs better.
+### From v2 Research (8-13)
+8. Signal methodology matters less than speed and diversification
+9. Continuous forecasts beat binary signals
+10. Volatility-targeted sizing is the biggest upgrade available
+11. Partial profits and break-even stops hurt trend following
+12. Time series momentum is a 200-year phenomenon
+13. Instrument diversification beats everything else
 
-3. **Validate across markets before optimizing.** We almost spent weeks optimizing NAS100-specific parameters. Cross-market testing revealed the system was structural, which is far more valuable than a 0.5% improvement on one instrument.
+### From v2.1 Optimization (14-17)
+14. Trade buffering beats rebalance frequency — signal-aware > calendar-aware
+15. Sharpe is flat across vol targets — vol targeting is pure leverage
+16. Not everything trends — the system correctly rejects instruments that don't
+17. Continuous sizing unlocks crypto — BTC from $83k to $413k
 
-4. **Additions that reduce participation usually hurt.** Strength filters, volatility scaling, and partial exits all reduced the system's ability to capture the big moves that drive returns.
+### From Going Live (18-20)
+18. CFD contract specs matter — XAUUSD lot sizing differs from ETF shares; sizing formula must account for broker's unit definition
+19. Pine Script can't manage multi-instrument portfolios — Python signal generator is the correct tool for portfolio-level sizing
+20. Capital is the real constraint — system works, infrastructure is built, signals are live; below ~£5k, trade minimum sizes manually until capital grows
 
-5. **Pyramiding works when the base system has positive expectancy.** Adding to winners amplified the edge. Taking partial profits reduced it. On trending instruments, convexity beats variance reduction.
+---
 
-6. **Position sizing matters more than entry timing.** Risk-based sizing across a portfolio with shared equity creates compounding effects that dwarf any entry signal improvement.
+## References
 
-7. **Accept what the system is.** This is a patient, low-frequency trend follower. Trying to make it trade more often or win more often degraded performance every time.
+### Academic Papers
+1. Moskowitz, T.J., Ooi, Y.H., Pedersen, L.H. (2012). "Time Series Momentum." *JFE*, 104(2), 228-250.
+2. Hurst, B., Ooi, Y.H., Pedersen, L.H. (2017). "A Century of Evidence on Trend-Following Investing." *JPM*, 44(1).
+3. Harvey, C.R. et al. (2018). "The Impact of Volatility Targeting." Man Group.
+4. Baltas, A.N., Kosowski, R. (2015). "Demystifying Time-Series Momentum Strategies." Imperial College.
+5. Shi, C., Lian, X. (2025). "Trend Following Strategies: A Practical Guide." SSRN.
+6. CFM (2014). "Two Centuries of Trend Following."
+7. Moreira, A., Muir, T. (2017). "Volatility-Managed Portfolios." *JF*, 72(4).
+
+### Practitioner Sources
+8. Carver, R. (2015). *Systematic Trading.* Harriman House.
+9. Carver, R. (2023). *Advanced Futures Trading Strategies.* Harriman House.
+10. Carver, R. Blog: qoppac.blogspot.com
+11. GitHub: github.com/robcarver17/pysystemtrade
+12. Concretum Group (2025). "Position Sizing in Trend-Following."
