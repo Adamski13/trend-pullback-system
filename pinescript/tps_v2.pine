@@ -1,16 +1,8 @@
 // =============================================================================
-// Trend Pullback System v2 — EWMAC Continuous Forecast (FIXED)
+// Trend Pullback System v2 — EWMAC Continuous Forecast
 //
-// Architecture: Carver-style blended EWMAC with volatility-targeted sizing
-//   - Three EWMAC speeds: 8/32, 16/64, 32/128 (equal-weighted, FDM=1.15)
-//   - Forecast scaled to mean |10|, capped at 20, floored at 0 (long-only)
-//   - Regime filter: SMA(200) zeroes forecast when price is below
-//   - Vol-targeted sizing: N = (Capital × VolTarget × Weight × IDM × F/10)
-//                                / (InstVol × Price)
-//   - Trade buffering: only rebalance when |target − current| > buffer % of avg pos
-//
-// FIX: Uses strategy.order() for absolute target sizing instead of
-//      strategy.entry() which has unintuitive pyramiding/replacement behavior.
+// Carver-style blended EWMAC with volatility-targeted sizing.
+// Three speeds: 8/32, 16/64, 32/128. FDM=1.15. Long-only. 200 SMA regime gate.
 //
 // Timeframe : Daily
 // =============================================================================
@@ -31,46 +23,42 @@ strategy(
     slippage           = 0
 )
 
-// ─────────────────────────────────────────────────────────────────────────────
-// INPUTS
-// ─────────────────────────────────────────────────────────────────────────────
+// ─── INPUTS ──────────────────────────────────────────────────────────────────
 
-i_vol_target    = input.float(0.20,  "Vol target (annual)",          minval=0.05, maxval=0.50, step=0.05, group="Sizing")
-i_instr_weight  = input.float(0.333, "Instrument weight",            minval=0.01, maxval=1.0,  step=0.01, group="Sizing")
-i_idm           = input.float(1.5,   "Instrument div. multiplier",   minval=1.0,  maxval=3.0,  step=0.1,  group="Sizing")
-i_vol_lookback  = input.int  (25,    "Vol lookback (bars)",          minval=10,   maxval=100,             group="Sizing")
-i_buffer        = input.float(0.30,  "Buffer threshold",             minval=0.05, maxval=0.50, step=0.05, group="Sizing",
-                               tooltip="Only rebalance when |target−current| > this fraction of avg position")
+i_vol_target   = input.float(0.20,  "Vol target (annual)",        minval=0.05, maxval=0.50, step=0.05, group="Sizing")
+i_instr_weight = input.float(0.333, "Instrument weight",          minval=0.01, maxval=1.0,  step=0.01, group="Sizing")
+i_idm          = input.float(1.5,   "Instrument div. multiplier", minval=1.0,  maxval=3.0,  step=0.1,  group="Sizing")
+i_vol_lookback = input.int  (25,    "Vol lookback (bars)",        minval=10,   maxval=100,             group="Sizing")
+i_buffer       = input.float(0.30,  "Buffer threshold",           minval=0.05, maxval=0.50, step=0.05, group="Sizing",
+                              tooltip="Only rebalance when |target-current| > this fraction of avg position")
 
-i_scalar_8_32   = input.float(10.6,  "Forecast scalar — EWMAC 8/32",   group="EWMAC Signals")
-i_scalar_16_64  = input.float(7.5,   "Forecast scalar — EWMAC 16/64",  group="EWMAC Signals")
-i_scalar_32_128 = input.float(5.3,   "Forecast scalar — EWMAC 32/128", group="EWMAC Signals")
-i_fdm           = input.float(1.15,  "Forecast div. multiplier (FDM)",  group="EWMAC Signals")
-i_fc_cap        = input.float(20.0,  "Forecast cap",                    group="EWMAC Signals")
+i_scalar_8_32   = input.float(10.6, "Forecast scalar 8/32",   group="EWMAC")
+i_scalar_16_64  = input.float(7.5,  "Forecast scalar 16/64",  group="EWMAC")
+i_scalar_32_128 = input.float(5.3,  "Forecast scalar 32/128", group="EWMAC")
+i_fdm           = input.float(1.15, "Forecast div. multiplier",group="EWMAC")
+i_fc_cap        = input.float(20.0, "Forecast cap",            group="EWMAC")
 
-i_regime_len    = input.int  (200,   "Regime SMA length",           minval=50, maxval=500,               group="Regime")
-i_regime_on     = input.bool (true,  "Enable regime filter",                                             group="Regime")
+i_regime_len = input.int (200,  "Regime SMA length",      minval=50, maxval=500, group="Regime")
+i_regime_on  = input.bool(true, "Enable regime filter",                          group="Regime")
 
-i_show_ema      = input.bool (true,  "Show EMA crossover lines",     group="Display")
-i_show_table    = input.bool (true,  "Show forecast table",          group="Display")
-i_show_label    = input.bool (true,  "Show info label",              group="Display")
+i_show_ema   = input.bool(true, "Show EMA lines",    group="Display")
+i_show_table = input.bool(true, "Show forecast table",group="Display")
+i_show_label = input.bool(true, "Show info label",    group="Display")
 
-// ─────────────────────────────────────────────────────────────────────────────
-// VOLATILITY
-// ─────────────────────────────────────────────────────────────────────────────
+// ─── VOLATILITY ──────────────────────────────────────────────────────────────
 
 float vol_alpha = 2.0 / (i_vol_lookback + 1)
 
-// Price-change vol — normalizes raw EWMAC signal
-float price_chg    = ta.change(close)
-float ewm_pc_mean  = ta.ema(nz(price_chg), i_vol_lookback)
-float dev_pc       = nz(price_chg) - nz(ewm_pc_mean)
+// Price-change vol (normalizes raw EWMAC)
+float price_chg   = ta.change(close)
+float ewm_pc_mean = ta.ema(nz(price_chg), i_vol_lookback)
+float dev_pc      = nz(price_chg) - nz(ewm_pc_mean)
 
 var float ewm_pc_var = 0.0
 ewm_pc_var := (1.0 - vol_alpha) * ewm_pc_var + vol_alpha * dev_pc * dev_pc
 float price_vol = math.sqrt(ewm_pc_var)
 
-// Return vol — annualized, for position sizing
+// Return vol (annualized, for position sizing)
 float daily_ret    = nz(close / close[1] - 1.0)
 float ewm_ret_mean = ta.ema(daily_ret, i_vol_lookback)
 float dev_ret      = daily_ret - nz(ewm_ret_mean)
@@ -79,9 +67,7 @@ var float ewm_ret_var = 0.0
 ewm_ret_var := (1.0 - vol_alpha) * ewm_ret_var + vol_alpha * dev_ret * dev_ret
 float inst_vol_annual = math.sqrt(ewm_ret_var) * math.sqrt(256.0)
 
-// ─────────────────────────────────────────────────────────────────────────────
-// EWMAC SIGNALS
-// ─────────────────────────────────────────────────────────────────────────────
+// ─── EWMAC SIGNALS ──────────────────────────────────────────────────────────
 
 float ema8   = ta.ema(close, 8)
 float ema16  = ta.ema(close, 16)
@@ -97,42 +83,32 @@ float fc_8_32   = price_vol > 0 ? (raw_8_32   / price_vol) * i_scalar_8_32   : 0
 float fc_16_64  = price_vol > 0 ? (raw_16_64  / price_vol) * i_scalar_16_64  : 0.0
 float fc_32_128 = price_vol > 0 ? (raw_32_128 / price_vol) * i_scalar_32_128 : 0.0
 
-float w = 1.0 / 3.0
-float blended = (w * fc_8_32 + w * fc_16_64 + w * fc_32_128) * i_fdm
+float blended = (fc_8_32 / 3.0 + fc_16_64 / 3.0 + fc_32_128 / 3.0) * i_fdm
 
-// ─────────────────────────────────────────────────────────────────────────────
-// REGIME FILTER
-// ─────────────────────────────────────────────────────────────────────────────
+// ─── REGIME FILTER ──────────────────────────────────────────────────────────
 
 float sma200     = ta.sma(close, i_regime_len)
 bool  regime_bull = close > sma200
 
-float forecast = math.max(0.0, math.min(blended, i_fc_cap))
-if i_regime_on and not regime_bull
-    forecast := 0.0
+// Forecast: cap, floor, regime gate — all inline to avoid := issues
+float forecast = i_regime_on and not regime_bull ? 0.0 : math.max(0.0, math.min(blended, i_fc_cap))
 
-// ─────────────────────────────────────────────────────────────────────────────
-// WARMUP GATE — don't trade until indicators are stable
-// ─────────────────────────────────────────────────────────────────────────────
+// ─── WARMUP GATE ────────────────────────────────────────────────────────────
 
-bool warmed_up = bar_index >= i_regime_len + 10 and inst_vol_annual > 0.01
+bool warmed_up = bar_index >= (i_regime_len + 10) and inst_vol_annual > 0.01
 
-// ─────────────────────────────────────────────────────────────────────────────
-// POSITION SIZING + BUFFER
-// ─────────────────────────────────────────────────────────────────────────────
+// ─── POSITION SIZING + BUFFER ───────────────────────────────────────────────
 
-float sz_num = strategy.equity * i_vol_target * i_instr_weight * i_idm * (forecast / 10.0)
-float sz_den = inst_vol_annual * close
-
-float target_qty = 0.0
-if warmed_up and inst_vol_annual > 0.01 and close > 0
-    target_qty := math.max(0.0, math.round(sz_num / sz_den))
-
-// Safety cap: never exceed 95% of equity in one instrument
+float sz_num  = strategy.equity * i_vol_target * i_instr_weight * i_idm * (forecast / 10.0)
+float sz_den  = inst_vol_annual * close
 float max_qty = math.max(math.floor(strategy.equity * 0.95 / close), 1.0)
-target_qty := math.min(target_qty, max_qty)
 
-// Running average of position size (for buffer calculation)
+// Target qty: inline ternary avoids := reassignment
+float target_qty = warmed_up and inst_vol_annual > 0.01 and close > 0
+     ? math.min(math.max(0.0, math.round(sz_num / sz_den)), max_qty)
+     : 0.0
+
+// Running average of position size (var persists across bars)
 var float avg_pos = 0.0
 avg_pos := 0.95 * avg_pos + 0.05 * math.abs(target_qty)
 
@@ -141,34 +117,24 @@ float delta         = target_qty - current_qty
 float buffer_thresh = i_buffer * math.max(avg_pos, 1.0)
 bool  should_trade  = warmed_up and math.abs(delta) >= buffer_thresh
 
-// ─────────────────────────────────────────────────────────────────────────────
-// STRATEGY ORDERS — using strategy.order() for precise absolute targeting
-//
-// Key insight: strategy.entry() with the same ID replaces the existing order,
-// it doesn't add to the position reliably. strategy.order() gives direct
-// control: positive qty = buy, negative qty = sell.
-//
-// We compute the delta (target - current) and issue a single order.
-// ─────────────────────────────────────────────────────────────────────────────
+// ─── STRATEGY ORDERS ────────────────────────────────────────────────────────
+// strategy.order() for precise delta-based sizing.
+// Positive qty on strategy.long = buy shares. strategy.short qty = sell shares.
 
 if should_trade
     if target_qty <= 0.0 and current_qty > 0.0
-        // Full exit
         strategy.close_all(comment="F=0")
     else if delta > 0.5
-        // Buy delta shares (scale up or initial entry)
         float buy_qty = math.round(delta)
         if buy_qty >= 1.0
-            strategy.order("Long", strategy.long, qty=buy_qty, comment=current_qty <= 0 ? "Enter" : "Scale↑")
+            strategy.order("Long", strategy.long, qty=buy_qty,
+                 comment=current_qty <= 0 ? "Enter" : "Scale+")
     else if delta < -0.5 and current_qty > 0
-        // Sell delta shares (scale down)
         float sell_qty = math.min(math.round(math.abs(delta)), current_qty)
         if sell_qty >= 1.0
-            strategy.order("Long", strategy.short, qty=sell_qty, comment="Scale↓")
+            strategy.order("Long", strategy.short, qty=sell_qty, comment="Scale-")
 
-// ─────────────────────────────────────────────────────────────────────────────
-// VISUALS
-// ─────────────────────────────────────────────────────────────────────────────
+// ─── VISUALS ────────────────────────────────────────────────────────────────
 
 // 200 SMA
 plot(sma200, "200 SMA", color=color.new(color.blue, 0), linewidth=2)
@@ -178,34 +144,22 @@ plot(i_show_ema ? ema8   : na, "EMA 8",   color=color.new(color.teal,   20), lin
 plot(i_show_ema ? ema32  : na, "EMA 32",  color=color.new(color.orange, 20), linewidth=1)
 plot(i_show_ema ? ema128 : na, "EMA 128", color=color.new(color.purple, 30), linewidth=1)
 
-// Regime / forecast background
-color bg = na
-if not regime_bull and i_regime_on
-    bg := color.new(color.red, 93)
-else if forecast >= 15
-    bg := color.new(color.green, 82)
-else if forecast >= 10
-    bg := color.new(color.green, 88)
-else if forecast >= 5
-    bg := color.new(color.green, 93)
-else if forecast > 0
-    bg := color.new(color.gray, 95)
-bgcolor(bg, title="Regime / forecast background")
+// Background: regime + forecast intensity
+color bg = i_regime_on and not regime_bull ? color.new(color.red, 93)
+         : forecast >= 15 ? color.new(color.green, 82)
+         : forecast >= 10 ? color.new(color.green, 88)
+         : forecast >= 5  ? color.new(color.green, 93)
+         : forecast > 0   ? color.new(color.gray, 95)
+         : na
+bgcolor(bg, title="Regime/forecast bg")
 
-// Forecast bar color
-color bc = color.new(color.gray, 30)
-if not regime_bull and i_regime_on
-    bc := color.new(color.red, 30)
-else if forecast >= 15
-    bc := color.new(color.green, 0)
-else if forecast >= 10
-    bc := color.new(color.green, 30)
-else if forecast >= 5
-    bc := color.new(color.yellow, 10)
-else if forecast > 0
-    bc := color.new(color.gray, 10)
-else
-    bc := color.new(color.red, 50)
+// Bar color
+color bc = i_regime_on and not regime_bull ? color.new(color.red, 30)
+         : forecast >= 15 ? color.new(color.green, 0)
+         : forecast >= 10 ? color.new(color.green, 30)
+         : forecast >= 5  ? color.new(color.yellow, 10)
+         : forecast > 0   ? color.new(color.gray, 10)
+         : color.new(color.red, 50)
 barcolor(bc, title="Forecast bar color")
 
 // Signal markers
@@ -213,109 +167,70 @@ bool fc_cross_strong = forecast >= 10.0 and forecast[1] < 10.0
 bool fc_drop_weak    = forecast < 5.0  and forecast[1] >= 5.0
 bool regime_exit     = not regime_bull  and regime_bull[1]
 
-plotshape(fc_cross_strong, title="Forecast strong (≥10)", style=shape.triangleup,
+plotshape(fc_cross_strong, title="Forecast >=10", style=shape.triangleup,
           location=location.belowbar, color=color.new(color.green, 0), size=size.small)
-
-plotshape(fc_drop_weak, title="Forecast weakening (<5)", style=shape.triangledown,
+plotshape(fc_drop_weak, title="Forecast <5", style=shape.triangledown,
           location=location.abovebar, color=color.new(color.orange, 0), size=size.small)
-
 plotshape(regime_exit and strategy.position_size > 0, title="Regime exit",
           style=shape.xcross, location=location.abovebar,
           color=color.new(color.red, 0), size=size.normal,
           text="REGIME", textcolor=color.new(color.red, 0))
 
-// ─────────────────────────────────────────────────────────────────────────────
-// FORECAST TABLE (bottom right)
-// ─────────────────────────────────────────────────────────────────────────────
+// ─── FORECAST TABLE ─────────────────────────────────────────────────────────
 
 var table tbl = table.new(position.bottom_right, 2, 7,
     bgcolor=color.new(color.navy, 75), border_color=color.new(color.gray, 60),
     border_width=1, frame_color=color.new(color.gray, 40), frame_width=1)
 
 if i_show_table and barstate.islast
-    color fc_col = forecast >= 15 ? color.lime :
-                   forecast >= 10 ? color.green :
-                   forecast >= 5  ? color.yellow :
-                   forecast > 0   ? color.orange : color.red
+    color fc_col = forecast >= 15 ? color.lime
+                 : forecast >= 10 ? color.green
+                 : forecast >= 5  ? color.yellow
+                 : forecast > 0   ? color.orange
+                 : color.red
 
-    table.cell(tbl, 0, 0, "TPS v2",    text_color=color.white,  text_size=size.small, bgcolor=color.new(color.navy, 50))
-    table.cell(tbl, 1, 0, "EWMAC",     text_color=color.silver, text_size=size.small, bgcolor=color.new(color.navy, 50))
-    table.cell(tbl, 0, 1, "Forecast",   text_color=color.silver, text_size=size.tiny)
-    table.cell(tbl, 1, 1, str.tostring(math.round(forecast, 1)) + " / 20",
-               text_color=fc_col, text_size=size.normal)
-    table.cell(tbl, 0, 2, "8/32",       text_color=color.silver, text_size=size.tiny)
+    table.cell(tbl, 0, 0, "TPS v2",   text_color=color.white,  text_size=size.small, bgcolor=color.new(color.navy, 50))
+    table.cell(tbl, 1, 0, "EWMAC",    text_color=color.silver, text_size=size.small, bgcolor=color.new(color.navy, 50))
+    table.cell(tbl, 0, 1, "Forecast",  text_color=color.silver, text_size=size.tiny)
+    table.cell(tbl, 1, 1, str.tostring(math.round(forecast, 1)) + " / 20", text_color=fc_col, text_size=size.normal)
+    table.cell(tbl, 0, 2, "8/32",      text_color=color.silver, text_size=size.tiny)
     table.cell(tbl, 1, 2, str.tostring(math.round(fc_8_32, 1)),   text_color=color.white, text_size=size.tiny)
-    table.cell(tbl, 0, 3, "16/64",      text_color=color.silver, text_size=size.tiny)
+    table.cell(tbl, 0, 3, "16/64",     text_color=color.silver, text_size=size.tiny)
     table.cell(tbl, 1, 3, str.tostring(math.round(fc_16_64, 1)),  text_color=color.white, text_size=size.tiny)
-    table.cell(tbl, 0, 4, "32/128",     text_color=color.silver, text_size=size.tiny)
+    table.cell(tbl, 0, 4, "32/128",    text_color=color.silver, text_size=size.tiny)
     table.cell(tbl, 1, 4, str.tostring(math.round(fc_32_128, 1)), text_color=color.white, text_size=size.tiny)
-    table.cell(tbl, 0, 5, "Regime",     text_color=color.silver, text_size=size.tiny)
+    table.cell(tbl, 0, 5, "Regime",    text_color=color.silver, text_size=size.tiny)
     table.cell(tbl, 1, 5, regime_bull ? "BULL ▲" : "BEAR ▼",
                text_color=regime_bull ? color.green : color.red, text_size=size.small)
-    table.cell(tbl, 0, 6, "Target",     text_color=color.silver, text_size=size.tiny)
-    table.cell(tbl, 1, 6, str.tostring(math.round(target_qty, 1)) + " sh",
-               text_color=color.white, text_size=size.small)
+    table.cell(tbl, 0, 6, "Target",    text_color=color.silver, text_size=size.tiny)
+    table.cell(tbl, 1, 6, str.tostring(math.round(target_qty, 1)) + " sh", text_color=color.white, text_size=size.small)
 
-// ─────────────────────────────────────────────────────────────────────────────
-// INFO LABEL (last bar)
-// ─────────────────────────────────────────────────────────────────────────────
+// ─── INFO LABEL ─────────────────────────────────────────────────────────────
 
 var label lbl = na
 
 if i_show_label and barstate.islast
     label.delete(lbl)
 
-    string signal_str = forecast >= 15 ? "STRONG ▲▲" :
-                        forecast >= 10 ? "MODERATE ▲" :
-                        forecast >= 5  ? "WEAK ▲" :
-                        forecast > 0   ? "MINIMAL" : "FLAT"
+    string signal_str = forecast >= 15 ? "STRONG" : forecast >= 10 ? "MODERATE" : forecast >= 5 ? "WEAK" : forecast > 0 ? "MINIMAL" : "FLAT"
+    string pos_str = current_qty > 0 ? str.tostring(math.round(current_qty)) + " sh (tgt: " + str.tostring(math.round(target_qty)) + ")" : "FLAT"
+    string trade_str = should_trade ? "REBALANCE (" + (delta > 0 ? "+" : "") + str.tostring(math.round(delta)) + ")" : "Buffered"
 
-    string pos_str = current_qty > 0 ?
-        str.tostring(math.round(current_qty)) + " sh  (target: " + str.tostring(math.round(target_qty)) + ")" : "FLAT"
+    string info = "TPS v2 EWMAC\n" +
+         "Forecast: " + str.tostring(math.round(forecast, 1)) + "/20 " + signal_str + "\n" +
+         "Regime: " + (regime_bull ? "BULL" : "BEAR") + "\n" +
+         "Vol: " + str.tostring(math.round(inst_vol_annual * 100, 1)) + "%\n" +
+         "Pos: " + pos_str + "\n" + trade_str
 
-    string trade_str = should_trade ?
-        "⚡ REBALANCE (" + (delta > 0 ? "+" : "") + str.tostring(math.round(delta)) + ")" :
-        "Buffered (Δ=" + str.tostring(math.round(delta, 1)) + " < " + str.tostring(math.round(buffer_thresh, 1)) + ")"
+    color lbl_bg = forecast >= 10 ? color.new(color.green, 70) : forecast > 0 ? color.new(color.navy, 70) : color.new(color.maroon, 70)
+    lbl := label.new(bar_index, high, info, xloc=xloc.bar_index, yloc=yloc.abovebar,
+         style=label.style_label_lower_right, color=lbl_bg, textcolor=color.white, size=size.small)
 
-    string info = "TPS v2  —  EWMAC\n────────────────────────\n" +
-        "Forecast:   " + str.tostring(math.round(forecast, 1)) + " / 20   " + signal_str + "\n" +
-        "  8/32:    " + str.tostring(math.round(fc_8_32, 2)) + "\n" +
-        "  16/64:   " + str.tostring(math.round(fc_16_64, 2)) + "\n" +
-        "  32/128:  " + str.tostring(math.round(fc_32_128, 2)) + "\n" +
-        "────────────────────────\n" +
-        "Regime:     " + (regime_bull ? "BULL ▲" : "BEAR ▼") + "\n" +
-        "Inst vol:   " + str.tostring(math.round(inst_vol_annual * 100, 1)) + "% annual\n" +
-        "Position:   " + pos_str + "\n" + trade_str + "\n" +
-        "────────────────────────\n" +
-        "SMA 200:  " + str.tostring(sma200, "#.##")
+// ─── ALERTS ─────────────────────────────────────────────────────────────────
 
-    color lbl_bg = forecast >= 10 ? color.new(color.green, 70) :
-                   forecast > 0   ? color.new(color.navy, 70) :
-                                    color.new(color.maroon, 70)
-
-    lbl := label.new(bar_index, high, info,
-        xloc=xloc.bar_index, yloc=yloc.abovebar,
-        style=label.style_label_lower_right,
-        color=lbl_bg, textcolor=color.white, size=size.small)
-
-// ─────────────────────────────────────────────────────────────────────────────
-// ALERTS
-// ─────────────────────────────────────────────────────────────────────────────
-
-alertcondition(regime_bull and not regime_bull[1],
-    title="Regime → Bull", message="TPS v2 — {{ticker}} above 200 SMA. Forecasts active.")
-
-alertcondition(not regime_bull and regime_bull[1],
-    title="Regime → Bear", message="TPS v2 — {{ticker}} below 200 SMA. Forecasts zeroed.")
-
-alertcondition(fc_cross_strong,
-    title="Forecast ≥10 — strong", message="TPS v2 — {{ticker}} forecast crossed 10. Trend strengthening.")
-
-alertcondition(fc_drop_weak,
-    title="Forecast <5 — weakening", message="TPS v2 — {{ticker}} forecast below 5. Trend weakening.")
-
-alertcondition(should_trade and delta > 0,
-    title="Scale Up triggered", message="TPS v2 — {{ticker}} scaling up. Buffer threshold crossed.")
-
-alertcondition(should_trade and delta < 0,
-    title="Scale Down triggered", message="TPS v2 — {{ticker}} scaling down. Buffer threshold crossed.")
+alertcondition(regime_bull and not regime_bull[1], title="Regime Bull", message="TPS v2 {{ticker}} above 200 SMA")
+alertcondition(not regime_bull and regime_bull[1], title="Regime Bear", message="TPS v2 {{ticker}} below 200 SMA")
+alertcondition(fc_cross_strong, title="Forecast 10+", message="TPS v2 {{ticker}} forecast crossed 10")
+alertcondition(fc_drop_weak, title="Forecast <5", message="TPS v2 {{ticker}} forecast below 5")
+alertcondition(should_trade and delta > 0, title="Scale Up", message="TPS v2 {{ticker}} scaling up")
+alertcondition(should_trade and delta < 0, title="Scale Down", message="TPS v2 {{ticker}} scaling down")
