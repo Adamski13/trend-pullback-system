@@ -1,0 +1,201 @@
+{
+  "NAS100_USD": {
+    "symbol": "NAS100_USD",
+    "total": 10225,
+    "bull": 4945,
+    "bear": 5280,
+    "by_level": {
+      "asian_high": 2937,
+      "asian_low": 2864,
+      "prev_day_high": 2343,
+      "prev_day_low": 2081
+    },
+    "by_session": {
+      "asian": 918,
+      "london": 1462,
+      "london_open": 1456,
+      "ny_afternoon": 2397,
+      "ny_close": 838,
+      "ny_open": 2854,
+      "off_hours": 300
+    },
+    "avg_sweep_r": 0.59,
+    "avg_stop_dist_r": 1.284,
+    "per_year": 1704.2,
+    "per_week": 32.77
+  },
+  "SPX500_USD": {
+    "symbol": "SPX500_USD",
+    "total": 9879,
+    "bull": 4761,
+    "bear": 5118,
+    "by_level": {
+      "asian_high": 2821,
+      "asian_low": 2787,
+      "prev_day_high": 2297,
+      "prev_day_low": 1974
+    },
+    "by_session": {
+      "asian": 852,
+      "london": 1450,
+      "london_open": 1428,
+      "ny_afternoon": 2400,
+      "ny_close": 895,
+      "ny_open": 2564,
+      "off_hours": 290
+    },
+    "avg_sweep_r": 0.591,
+    "avg_stop_dist_r": 1.292,
+    "per_year": 1646.5,
+    "per_week": 31.66
+  },
+  "UK100_GBP": {
+    "symbol": "UK100_GBP",
+    "total": 7910,
+    "bull": 3685,
+    "bear": 4225,
+    "by_level": {
+      "asian_high": 2408,
+      "asian_low": 2199,
+      "prev_day_high": 1817,
+      "prev_day_low": 1486
+    },
+    "by_session": {
+      "asian": 718,
+      "london": 1560,
+      "london_open": 2061,
+      "ny_afternoon": 1362,
+      "ny_close": 436,
+      "ny_open": 1773
+    },
+    "avg_sweep_r": 0.584,
+    "avg_stop_dist_r": 1.285,
+    "per_year": 1318.3,
+    "per_week": 25.35
+  },
+  "EUR_USD": {
+    "symbol": "EUR_USD",
+    "total": 9380,
+    "bull": 4806,
+    "bear": 4574,
+    "by_level": {
+      "asian_high": 2376,
+      "asian_low": 2515,
+      "prev_day_high": 2198,
+      "prev_day_low": 2291
+    },
+    "by_session": {
+      "asian": 1274,
+      "london": 1731,
+      "london_open": 1923,
+      "ny_afternoon": 1501,
+      "ny_close": 396,
+      "ny_open": 2209,
+      "off_hours": 346
+    },
+    "avg_sweep_r": 0.574,
+    "avg_stop_dist_r": 1.232,
+    "per_year": 1563.3,
+    "per_week": 30.06
+  },
+  "GBP_USD": {
+    "symbol": "GBP_USD",
+    "total": 9798,
+    "bull": 4972,
+    "bear": 4826,
+    "by_level": {
+      "asian_high": 2460,
+      "asian_low": 2664,
+      "prev_day_high": 2366,
+      "prev_day_low": 2308
+    },
+    "by_session": {
+      "asian": 1235,
+      "london": 1975,
+      "london_open": 1961,
+      "ny_afternoon": 1521,
+      "ny_close": 412,
+      "ny_open": 2251,
+      "off_hours": 443
+    },
+    "avg_sweep_r": 0.576,
+    "avg_stop_dist_r": 1.227,
+    "per_year": 1633.0,
+    "per_week": 31.4
+  },
+  "USD_JPY": {
+    "symbol": "USD_JPY",
+    "total": 7725,
+    "bull": 3584,
+    "bear": 4141,
+    "by_level": {
+      "asian_high": 1904,
+      "asian_low": 1794,
+      "prev_day_high": 2237,
+      "prev_day_low": 1790
+    },
+    "by_session": {
+      "asian": 1361,
+      "london": 1181,
+      "london_open": 1197,
+      "ny_afternoon": 1138,
+      "ny_close": 414,
+      "ny_open": 1884,
+      "off_hours": 550
+    },
+    "avg_sweep_r": 0.574,
+    "avg_stop_dist_r": 1.219,
+    "per_year": 1287.5,
+    "per_week": 24.76
+  },
+  "XAU_USD": {
+    "symbol": "XAU_USD",
+    "total": 8736,
+    "bull": 4221,
+    "bear": 4515,
+    "by_level": {
+      "asian_high": 2397,
+      "asian_low": 2222,
+      "prev_day_high": 2118,
+      "prev_day_low": 1999
+    },
+    "by_session": {
+      "asian": 1235,
+      "london": 1500,
+      "london_open": 1273,
+      "ny_afternoon": 1383,
+      "ny_close": 375,
+      "ny_open": 2701,
+      "off_hours": 269
+    },
+    "avg_sweep_r": 0.579,
+    "avg_stop_dist_r": 1.229,
+    "per_year": 1456.0,
+    "per_week": 28.0
+  },
+  "BTC_USD": {
+    "symbol": "BTC_USD",
+    "total": 8317,
+    "bull": 4285,
+    "bear": 4032,
+    "by_level": {
+      "asian_high": 2206,
+      "asian_low": 2452,
+      "prev_day_high": 1826,
+      "prev_day_low": 1833
+    },
+    "by_session": {
+      "asian": 983,
+      "london": 1313,
+      "london_open": 863,
+      "ny_afternoon": 1769,
+      "ny_close": 717,
+      "ny_open": 1907,
+      "off_hours": 765
+    },
+    "avg_sweep_r": 0.585,
+    "avg_stop_dist_r": 1.246,
+    "per_year": 1386.2,
+    "per_week": 26.66
+  }
+}
