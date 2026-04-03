@@ -1,0 +1,1399 @@
+{
+  "NAS100_USD": {
+    "use_bias": true,
+    "total_sfps": 2725,
+    "per_session": {
+      "asian": {
+        "label": "",
+        "total_sfps": 220,
+        "traded": 220,
+        "timed_out": 0,
+        "wins": 115,
+        "losses": 105,
+        "win_rate": 0.5227,
+        "avg_pnl_r": 0.0455,
+        "total_r": 10.0,
+        "profit_factor": 1.095,
+        "sharpe_r": 0.721,
+        "avg_bars_held": 5.5
+      },
+      "london_open": {
+        "label": "",
+        "total_sfps": 354,
+        "traded": 354,
+        "timed_out": 0,
+        "wins": 188,
+        "losses": 166,
+        "win_rate": 0.5311,
+        "avg_pnl_r": 0.0621,
+        "total_r": 22.0,
+        "profit_factor": 1.133,
+        "sharpe_r": 0.987,
+        "avg_bars_held": 4.8
+      },
+      "london": {
+        "label": "",
+        "total_sfps": 387,
+        "traded": 387,
+        "timed_out": 0,
+        "wins": 188,
+        "losses": 199,
+        "win_rate": 0.4858,
+        "avg_pnl_r": -0.0284,
+        "total_r": -11.0,
+        "profit_factor": 0.945,
+        "sharpe_r": -0.451,
+        "avg_bars_held": 4.1
+      },
+      "ny_open": {
+        "label": "",
+        "total_sfps": 736,
+        "traded": 735,
+        "timed_out": 1,
+        "wins": 345,
+        "losses": 390,
+        "win_rate": 0.4694,
+        "avg_pnl_r": -0.0612,
+        "total_r": -45.0,
+        "profit_factor": 0.885,
+        "sharpe_r": -0.973,
+        "avg_bars_held": 5.5
+      },
+      "ny_afternoon": {
+        "label": "",
+        "total_sfps": 691,
+        "traded": 691,
+        "timed_out": 0,
+        "wins": 360,
+        "losses": 331,
+        "win_rate": 0.521,
+        "avg_pnl_r": 0.042,
+        "total_r": 29.0,
+        "profit_factor": 1.088,
+        "sharpe_r": 0.666,
+        "avg_bars_held": 9.4
+      },
+      "ny_close": {
+        "label": "",
+        "total_sfps": 247,
+        "traded": 245,
+        "timed_out": 2,
+        "wins": 126,
+        "losses": 119,
+        "win_rate": 0.5143,
+        "avg_pnl_r": 0.0286,
+        "total_r": 7.0,
+        "profit_factor": 1.059,
+        "sharpe_r": 0.453,
+        "avg_bars_held": 12.6
+      }
+    },
+    "top_combos": [
+      {
+        "sessions": [
+          "london_open"
+        ],
+        "sessions_str": "london_open",
+        "n_sessions": 1,
+        "traded": 354,
+        "tpw": 1.13,
+        "win_rate": 0.5311,
+        "profit_factor": 1.133,
+        "total_r": 22.0,
+        "sharpe_r": 0.987
+      },
+      {
+        "sessions": [
+          "asian",
+          "london_open"
+        ],
+        "sessions_str": "asian+london_open",
+        "n_sessions": 2,
+        "traded": 574,
+        "tpw": 1.84,
+        "win_rate": 0.5279,
+        "profit_factor": 1.118,
+        "total_r": 32.0,
+        "sharpe_r": 0.886
+      },
+      {
+        "sessions": [
+          "london_open",
+          "ny_afternoon"
+        ],
+        "sessions_str": "london_open+ny_afternoon",
+        "n_sessions": 2,
+        "traded": 1045,
+        "tpw": 3.35,
+        "win_rate": 0.5244,
+        "profit_factor": 1.103,
+        "total_r": 51.0,
+        "sharpe_r": 0.775
+      },
+      {
+        "sessions": [
+          "london_open",
+          "ny_close"
+        ],
+        "sessions_str": "london_open+ny_close",
+        "n_sessions": 2,
+        "traded": 599,
+        "tpw": 1.92,
+        "win_rate": 0.5242,
+        "profit_factor": 1.102,
+        "total_r": 29.0,
+        "sharpe_r": 0.769
+      },
+      {
+        "sessions": [
+          "asian",
+          "london_open",
+          "ny_afternoon"
+        ],
+        "sessions_str": "asian+london_open+ny_afternoon",
+        "n_sessions": 3,
+        "traded": 1265,
+        "tpw": 4.05,
+        "win_rate": 0.5241,
+        "profit_factor": 1.101,
+        "total_r": 61.0,
+        "sharpe_r": 0.766
+      }
+    ],
+    "best_combo": {
+      "sessions": [
+        "london_open"
+      ],
+      "sessions_str": "london_open",
+      "n_sessions": 1,
+      "traded": 354,
+      "tpw": 1.13,
+      "win_rate": 0.5311,
+      "profit_factor": 1.133,
+      "total_r": 22.0,
+      "sharpe_r": 0.987
+    }
+  },
+  "SPX500_USD": {
+    "use_bias": true,
+    "total_sfps": 2772,
+    "per_session": {
+      "asian": {
+        "label": "",
+        "total_sfps": 252,
+        "traded": 252,
+        "timed_out": 0,
+        "wins": 134,
+        "losses": 118,
+        "win_rate": 0.5317,
+        "avg_pnl_r": 0.0635,
+        "total_r": 16.0,
+        "profit_factor": 1.136,
+        "sharpe_r": 1.008,
+        "avg_bars_held": 5.9
+      },
+      "london_open": {
+        "label": "",
+        "total_sfps": 368,
+        "traded": 368,
+        "timed_out": 0,
+        "wins": 203,
+        "losses": 165,
+        "win_rate": 0.5516,
+        "avg_pnl_r": 0.1033,
+        "total_r": 38.0,
+        "profit_factor": 1.23,
+        "sharpe_r": 1.646,
+        "avg_bars_held": 5.4
+      },
+      "london": {
+        "label": "",
+        "total_sfps": 377,
+        "traded": 377,
+        "timed_out": 0,
+        "wins": 209,
+        "losses": 168,
+        "win_rate": 0.5544,
+        "avg_pnl_r": 0.1088,
+        "total_r": 41.0,
+        "profit_factor": 1.244,
+        "sharpe_r": 1.734,
+        "avg_bars_held": 4.5
+      },
+      "ny_open": {
+        "label": "",
+        "total_sfps": 657,
+        "traded": 656,
+        "timed_out": 1,
+        "wins": 308,
+        "losses": 348,
+        "win_rate": 0.4695,
+        "avg_pnl_r": -0.061,
+        "total_r": -40.0,
+        "profit_factor": 0.885,
+        "sharpe_r": -0.969,
+        "avg_bars_held": 4.4
+      },
+      "ny_afternoon": {
+        "label": "",
+        "total_sfps": 727,
+        "traded": 725,
+        "timed_out": 2,
+        "wins": 350,
+        "losses": 375,
+        "win_rate": 0.4828,
+        "avg_pnl_r": -0.0345,
+        "total_r": -25.0,
+        "profit_factor": 0.933,
+        "sharpe_r": -0.547,
+        "avg_bars_held": 8.4
+      },
+      "ny_close": {
+        "label": "",
+        "total_sfps": 295,
+        "traded": 293,
+        "timed_out": 2,
+        "wins": 129,
+        "losses": 164,
+        "win_rate": 0.4403,
+        "avg_pnl_r": -0.1195,
+        "total_r": -35.0,
+        "profit_factor": 0.787,
+        "sharpe_r": -1.907,
+        "avg_bars_held": 16.1
+      }
+    },
+    "top_combos": [
+      {
+        "sessions": [
+          "london"
+        ],
+        "sessions_str": "london",
+        "n_sessions": 1,
+        "traded": 377,
+        "tpw": 1.21,
+        "win_rate": 0.5544,
+        "profit_factor": 1.244,
+        "total_r": 41.0,
+        "sharpe_r": 1.734
+      },
+      {
+        "sessions": [
+          "london_open",
+          "london"
+        ],
+        "sessions_str": "london_open+london",
+        "n_sessions": 2,
+        "traded": 745,
+        "tpw": 2.39,
+        "win_rate": 0.553,
+        "profit_factor": 1.237,
+        "total_r": 79.0,
+        "sharpe_r": 1.692
+      },
+      {
+        "sessions": [
+          "london_open"
+        ],
+        "sessions_str": "london_open",
+        "n_sessions": 1,
+        "traded": 368,
+        "tpw": 1.18,
+        "win_rate": 0.5516,
+        "profit_factor": 1.23,
+        "total_r": 38.0,
+        "sharpe_r": 1.646
+      },
+      {
+        "sessions": [
+          "asian",
+          "london_open",
+          "london"
+        ],
+        "sessions_str": "asian+london_open+london",
+        "n_sessions": 3,
+        "traded": 997,
+        "tpw": 3.2,
+        "win_rate": 0.5476,
+        "profit_factor": 1.211,
+        "total_r": 95.0,
+        "sharpe_r": 1.519
+      },
+      {
+        "sessions": [
+          "asian",
+          "london"
+        ],
+        "sessions_str": "asian+london",
+        "n_sessions": 2,
+        "traded": 629,
+        "tpw": 2.02,
+        "win_rate": 0.5453,
+        "profit_factor": 1.199,
+        "total_r": 57.0,
+        "sharpe_r": 1.443
+      }
+    ],
+    "best_combo": {
+      "sessions": [
+        "london"
+      ],
+      "sessions_str": "london",
+      "n_sessions": 1,
+      "traded": 377,
+      "tpw": 1.21,
+      "win_rate": 0.5544,
+      "profit_factor": 1.244,
+      "total_r": 41.0,
+      "sharpe_r": 1.734
+    }
+  },
+  "UK100_GBP": {
+    "use_bias": true,
+    "total_sfps": 1750,
+    "per_session": {
+      "asian": {
+        "label": "",
+        "total_sfps": 123,
+        "traded": 123,
+        "timed_out": 0,
+        "wins": 53,
+        "losses": 70,
+        "win_rate": 0.4309,
+        "avg_pnl_r": -0.1382,
+        "total_r": -17.0,
+        "profit_factor": 0.757,
+        "sharpe_r": -2.206,
+        "avg_bars_held": 5.5
+      },
+      "london_open": {
+        "label": "",
+        "total_sfps": 467,
+        "traded": 462,
+        "timed_out": 5,
+        "wins": 240,
+        "losses": 222,
+        "win_rate": 0.5195,
+        "avg_pnl_r": 0.039,
+        "total_r": 18.0,
+        "profit_factor": 1.081,
+        "sharpe_r": 0.618,
+        "avg_bars_held": 6.1
+      },
+      "london": {
+        "label": "",
+        "total_sfps": 330,
+        "traded": 329,
+        "timed_out": 1,
+        "wins": 170,
+        "losses": 159,
+        "win_rate": 0.5167,
+        "avg_pnl_r": 0.0334,
+        "total_r": 11.0,
+        "profit_factor": 1.069,
+        "sharpe_r": 0.53,
+        "avg_bars_held": 5.4
+      },
+      "ny_open": {
+        "label": "",
+        "total_sfps": 398,
+        "traded": 398,
+        "timed_out": 0,
+        "wins": 216,
+        "losses": 182,
+        "win_rate": 0.5427,
+        "avg_pnl_r": 0.0854,
+        "total_r": 34.0,
+        "profit_factor": 1.187,
+        "sharpe_r": 1.359,
+        "avg_bars_held": 5.1
+      },
+      "ny_afternoon": {
+        "label": "",
+        "total_sfps": 329,
+        "traded": 328,
+        "timed_out": 1,
+        "wins": 161,
+        "losses": 167,
+        "win_rate": 0.4909,
+        "avg_pnl_r": -0.0183,
+        "total_r": -6.0,
+        "profit_factor": 0.964,
+        "sharpe_r": -0.29,
+        "avg_bars_held": 7.3
+      },
+      "ny_close": {
+        "label": "",
+        "total_sfps": 103,
+        "traded": 103,
+        "timed_out": 0,
+        "wins": 51,
+        "losses": 52,
+        "win_rate": 0.4951,
+        "avg_pnl_r": -0.0097,
+        "total_r": -1.0,
+        "profit_factor": 0.981,
+        "sharpe_r": -0.153,
+        "avg_bars_held": 5.8
+      }
+    },
+    "top_combos": [
+      {
+        "sessions": [
+          "ny_open"
+        ],
+        "sessions_str": "ny_open",
+        "n_sessions": 1,
+        "traded": 398,
+        "tpw": 1.28,
+        "win_rate": 0.5427,
+        "profit_factor": 1.187,
+        "total_r": 34.0,
+        "sharpe_r": 1.359
+      },
+      {
+        "sessions": [
+          "ny_open",
+          "ny_close"
+        ],
+        "sessions_str": "ny_open+ny_close",
+        "n_sessions": 2,
+        "traded": 501,
+        "tpw": 1.61,
+        "win_rate": 0.5329,
+        "profit_factor": 1.141,
+        "total_r": 33.0,
+        "sharpe_r": 1.047
+      },
+      {
+        "sessions": [
+          "london",
+          "ny_open"
+        ],
+        "sessions_str": "london+ny_open",
+        "n_sessions": 2,
+        "traded": 727,
+        "tpw": 2.33,
+        "win_rate": 0.5309,
+        "profit_factor": 1.132,
+        "total_r": 45.0,
+        "sharpe_r": 0.984
+      },
+      {
+        "sessions": [
+          "london_open",
+          "ny_open"
+        ],
+        "sessions_str": "london_open+ny_open",
+        "n_sessions": 2,
+        "traded": 860,
+        "tpw": 2.76,
+        "win_rate": 0.5302,
+        "profit_factor": 1.129,
+        "total_r": 52.0,
+        "sharpe_r": 0.961
+      },
+      {
+        "sessions": [
+          "london_open",
+          "london",
+          "ny_open"
+        ],
+        "sessions_str": "london_open+london+ny_open",
+        "n_sessions": 3,
+        "traded": 1189,
+        "tpw": 3.81,
+        "win_rate": 0.5265,
+        "profit_factor": 1.112,
+        "total_r": 63.0,
+        "sharpe_r": 0.842
+      }
+    ],
+    "best_combo": {
+      "sessions": [
+        "ny_open"
+      ],
+      "sessions_str": "ny_open",
+      "n_sessions": 1,
+      "traded": 398,
+      "tpw": 1.28,
+      "win_rate": 0.5427,
+      "profit_factor": 1.187,
+      "total_r": 34.0,
+      "sharpe_r": 1.359
+    }
+  },
+  "EUR_USD": {
+    "use_bias": true,
+    "total_sfps": 1771,
+    "per_session": {
+      "asian": {
+        "label": "",
+        "total_sfps": 268,
+        "traded": 268,
+        "timed_out": 0,
+        "wins": 144,
+        "losses": 124,
+        "win_rate": 0.5373,
+        "avg_pnl_r": 0.0746,
+        "total_r": 20.0,
+        "profit_factor": 1.161,
+        "sharpe_r": 1.186,
+        "avg_bars_held": 4.5
+      },
+      "london_open": {
+        "label": "",
+        "total_sfps": 375,
+        "traded": 375,
+        "timed_out": 0,
+        "wins": 200,
+        "losses": 175,
+        "win_rate": 0.5333,
+        "avg_pnl_r": 0.0667,
+        "total_r": 25.0,
+        "profit_factor": 1.143,
+        "sharpe_r": 1.059,
+        "avg_bars_held": 4.3
+      },
+      "london": {
+        "label": "",
+        "total_sfps": 291,
+        "traded": 291,
+        "timed_out": 0,
+        "wins": 154,
+        "losses": 137,
+        "win_rate": 0.5292,
+        "avg_pnl_r": 0.0584,
+        "total_r": 17.0,
+        "profit_factor": 1.124,
+        "sharpe_r": 0.927,
+        "avg_bars_held": 4.5
+      },
+      "ny_open": {
+        "label": "",
+        "total_sfps": 400,
+        "traded": 395,
+        "timed_out": 5,
+        "wins": 199,
+        "losses": 196,
+        "win_rate": 0.5038,
+        "avg_pnl_r": 0.0076,
+        "total_r": 3.0,
+        "profit_factor": 1.015,
+        "sharpe_r": 0.12,
+        "avg_bars_held": 7.1
+      },
+      "ny_afternoon": {
+        "label": "",
+        "total_sfps": 290,
+        "traded": 290,
+        "timed_out": 0,
+        "wins": 148,
+        "losses": 142,
+        "win_rate": 0.5103,
+        "avg_pnl_r": 0.0207,
+        "total_r": 6.0,
+        "profit_factor": 1.042,
+        "sharpe_r": 0.328,
+        "avg_bars_held": 9.6
+      },
+      "ny_close": {
+        "label": "",
+        "total_sfps": 76,
+        "traded": 76,
+        "timed_out": 0,
+        "wins": 38,
+        "losses": 38,
+        "win_rate": 0.5,
+        "avg_pnl_r": 0.0,
+        "total_r": 0.0,
+        "profit_factor": 1.0,
+        "sharpe_r": 0.0,
+        "avg_bars_held": 9.3
+      }
+    },
+    "top_combos": [
+      {
+        "sessions": [
+          "asian"
+        ],
+        "sessions_str": "asian",
+        "n_sessions": 1,
+        "traded": 268,
+        "tpw": 0.86,
+        "win_rate": 0.5373,
+        "profit_factor": 1.161,
+        "total_r": 20.0,
+        "sharpe_r": 1.186
+      },
+      {
+        "sessions": [
+          "asian",
+          "london_open"
+        ],
+        "sessions_str": "asian+london_open",
+        "n_sessions": 2,
+        "traded": 643,
+        "tpw": 2.06,
+        "win_rate": 0.535,
+        "profit_factor": 1.151,
+        "total_r": 45.0,
+        "sharpe_r": 1.113
+      },
+      {
+        "sessions": [
+          "london_open"
+        ],
+        "sessions_str": "london_open",
+        "n_sessions": 1,
+        "traded": 375,
+        "tpw": 1.2,
+        "win_rate": 0.5333,
+        "profit_factor": 1.143,
+        "total_r": 25.0,
+        "sharpe_r": 1.059
+      },
+      {
+        "sessions": [
+          "asian",
+          "london"
+        ],
+        "sessions_str": "asian+london",
+        "n_sessions": 2,
+        "traded": 559,
+        "tpw": 1.79,
+        "win_rate": 0.5331,
+        "profit_factor": 1.142,
+        "total_r": 37.0,
+        "sharpe_r": 1.052
+      },
+      {
+        "sessions": [
+          "asian",
+          "london_open",
+          "london"
+        ],
+        "sessions_str": "asian+london_open+london",
+        "n_sessions": 3,
+        "traded": 934,
+        "tpw": 2.99,
+        "win_rate": 0.5332,
+        "profit_factor": 1.142,
+        "total_r": 62.0,
+        "sharpe_r": 1.056
+      }
+    ],
+    "best_combo": {
+      "sessions": [
+        "asian"
+      ],
+      "sessions_str": "asian",
+      "n_sessions": 1,
+      "traded": 268,
+      "tpw": 0.86,
+      "win_rate": 0.5373,
+      "profit_factor": 1.161,
+      "total_r": 20.0,
+      "sharpe_r": 1.186
+    }
+  },
+  "GBP_USD": {
+    "use_bias": true,
+    "total_sfps": 1770,
+    "per_session": {
+      "asian": {
+        "label": "",
+        "total_sfps": 219,
+        "traded": 219,
+        "timed_out": 0,
+        "wins": 110,
+        "losses": 109,
+        "win_rate": 0.5023,
+        "avg_pnl_r": 0.0046,
+        "total_r": 1.0,
+        "profit_factor": 1.009,
+        "sharpe_r": 0.072,
+        "avg_bars_held": 4.2
+      },
+      "london_open": {
+        "label": "",
+        "total_sfps": 358,
+        "traded": 358,
+        "timed_out": 0,
+        "wins": 193,
+        "losses": 165,
+        "win_rate": 0.5391,
+        "avg_pnl_r": 0.0782,
+        "total_r": 28.0,
+        "profit_factor": 1.17,
+        "sharpe_r": 1.244,
+        "avg_bars_held": 3.9
+      },
+      "london": {
+        "label": "",
+        "total_sfps": 330,
+        "traded": 328,
+        "timed_out": 2,
+        "wins": 155,
+        "losses": 173,
+        "win_rate": 0.4726,
+        "avg_pnl_r": -0.0549,
+        "total_r": -18.0,
+        "profit_factor": 0.896,
+        "sharpe_r": -0.871,
+        "avg_bars_held": 4.6
+      },
+      "ny_open": {
+        "label": "",
+        "total_sfps": 449,
+        "traded": 448,
+        "timed_out": 1,
+        "wins": 228,
+        "losses": 220,
+        "win_rate": 0.5089,
+        "avg_pnl_r": 0.0179,
+        "total_r": 8.0,
+        "profit_factor": 1.036,
+        "sharpe_r": 0.283,
+        "avg_bars_held": 6.8
+      },
+      "ny_afternoon": {
+        "label": "",
+        "total_sfps": 257,
+        "traded": 256,
+        "timed_out": 1,
+        "wins": 131,
+        "losses": 125,
+        "win_rate": 0.5117,
+        "avg_pnl_r": 0.0234,
+        "total_r": 6.0,
+        "profit_factor": 1.048,
+        "sharpe_r": 0.371,
+        "avg_bars_held": 10.3
+      },
+      "ny_close": {
+        "label": "",
+        "total_sfps": 73,
+        "traded": 73,
+        "timed_out": 0,
+        "wins": 40,
+        "losses": 33,
+        "win_rate": 0.5479,
+        "avg_pnl_r": 0.0959,
+        "total_r": 7.0,
+        "profit_factor": 1.212,
+        "sharpe_r": 1.519,
+        "avg_bars_held": 13.0
+      }
+    },
+    "top_combos": [
+      {
+        "sessions": [
+          "london_open",
+          "ny_close"
+        ],
+        "sessions_str": "london_open+ny_close",
+        "n_sessions": 2,
+        "traded": 431,
+        "tpw": 1.38,
+        "win_rate": 0.5406,
+        "profit_factor": 1.177,
+        "total_r": 35.0,
+        "sharpe_r": 1.292
+      },
+      {
+        "sessions": [
+          "london_open"
+        ],
+        "sessions_str": "london_open",
+        "n_sessions": 1,
+        "traded": 358,
+        "tpw": 1.15,
+        "win_rate": 0.5391,
+        "profit_factor": 1.17,
+        "total_r": 28.0,
+        "sharpe_r": 1.244
+      },
+      {
+        "sessions": [
+          "london_open",
+          "ny_afternoon",
+          "ny_close"
+        ],
+        "sessions_str": "london_open+ny_afternoon+ny_close",
+        "n_sessions": 3,
+        "traded": 687,
+        "tpw": 2.2,
+        "win_rate": 0.5298,
+        "profit_factor": 1.127,
+        "total_r": 41.0,
+        "sharpe_r": 0.948
+      },
+      {
+        "sessions": [
+          "london_open",
+          "ny_afternoon"
+        ],
+        "sessions_str": "london_open+ny_afternoon",
+        "n_sessions": 2,
+        "traded": 614,
+        "tpw": 1.97,
+        "win_rate": 0.5277,
+        "profit_factor": 1.117,
+        "total_r": 34.0,
+        "sharpe_r": 0.88
+      },
+      {
+        "sessions": [
+          "asian",
+          "london_open",
+          "ny_close"
+        ],
+        "sessions_str": "asian+london_open+ny_close",
+        "n_sessions": 3,
+        "traded": 650,
+        "tpw": 2.08,
+        "win_rate": 0.5277,
+        "profit_factor": 1.117,
+        "total_r": 36.0,
+        "sharpe_r": 0.88
+      }
+    ],
+    "best_combo": {
+      "sessions": [
+        "london_open",
+        "ny_close"
+      ],
+      "sessions_str": "london_open+ny_close",
+      "n_sessions": 2,
+      "traded": 431,
+      "tpw": 1.38,
+      "win_rate": 0.5406,
+      "profit_factor": 1.177,
+      "total_r": 35.0,
+      "sharpe_r": 1.292
+    }
+  },
+  "USD_JPY": {
+    "use_bias": false,
+    "total_sfps": 3584,
+    "per_session": {
+      "asian": {
+        "label": "",
+        "total_sfps": 591,
+        "traded": 590,
+        "timed_out": 1,
+        "wins": 317,
+        "losses": 273,
+        "win_rate": 0.5373,
+        "avg_pnl_r": 0.0746,
+        "total_r": 44.0,
+        "profit_factor": 1.161,
+        "sharpe_r": 1.186,
+        "avg_bars_held": 4.5
+      },
+      "london_open": {
+        "label": "",
+        "total_sfps": 546,
+        "traded": 546,
+        "timed_out": 0,
+        "wins": 282,
+        "losses": 264,
+        "win_rate": 0.5165,
+        "avg_pnl_r": 0.033,
+        "total_r": 18.0,
+        "profit_factor": 1.068,
+        "sharpe_r": 0.523,
+        "avg_bars_held": 4.7
+      },
+      "london": {
+        "label": "",
+        "total_sfps": 558,
+        "traded": 555,
+        "timed_out": 3,
+        "wins": 282,
+        "losses": 273,
+        "win_rate": 0.5081,
+        "avg_pnl_r": 0.0162,
+        "total_r": 9.0,
+        "profit_factor": 1.033,
+        "sharpe_r": 0.257,
+        "avg_bars_held": 4.4
+      },
+      "ny_open": {
+        "label": "",
+        "total_sfps": 898,
+        "traded": 881,
+        "timed_out": 17,
+        "wins": 422,
+        "losses": 459,
+        "win_rate": 0.479,
+        "avg_pnl_r": -0.042,
+        "total_r": -37.0,
+        "profit_factor": 0.919,
+        "sharpe_r": -0.667,
+        "avg_bars_held": 7.0
+      },
+      "ny_afternoon": {
+        "label": "",
+        "total_sfps": 546,
+        "traded": 534,
+        "timed_out": 12,
+        "wins": 270,
+        "losses": 264,
+        "win_rate": 0.5056,
+        "avg_pnl_r": 0.0112,
+        "total_r": 6.0,
+        "profit_factor": 1.023,
+        "sharpe_r": 0.178,
+        "avg_bars_held": 9.4
+      },
+      "ny_close": {
+        "label": "",
+        "total_sfps": 193,
+        "traded": 193,
+        "timed_out": 0,
+        "wins": 93,
+        "losses": 100,
+        "win_rate": 0.4819,
+        "avg_pnl_r": -0.0363,
+        "total_r": -7.0,
+        "profit_factor": 0.93,
+        "sharpe_r": -0.575,
+        "avg_bars_held": 6.3
+      }
+    },
+    "top_combos": [
+      {
+        "sessions": [
+          "asian"
+        ],
+        "sessions_str": "asian",
+        "n_sessions": 1,
+        "traded": 590,
+        "tpw": 1.89,
+        "win_rate": 0.5373,
+        "profit_factor": 1.161,
+        "total_r": 44.0,
+        "sharpe_r": 1.186
+      },
+      {
+        "sessions": [
+          "asian",
+          "london_open"
+        ],
+        "sessions_str": "asian+london_open",
+        "n_sessions": 2,
+        "traded": 1136,
+        "tpw": 3.64,
+        "win_rate": 0.5273,
+        "profit_factor": 1.115,
+        "total_r": 62.0,
+        "sharpe_r": 0.867
+      },
+      {
+        "sessions": [
+          "asian",
+          "ny_close"
+        ],
+        "sessions_str": "asian+ny_close",
+        "n_sessions": 2,
+        "traded": 783,
+        "tpw": 2.51,
+        "win_rate": 0.5236,
+        "profit_factor": 1.099,
+        "total_r": 37.0,
+        "sharpe_r": 0.75
+      },
+      {
+        "sessions": [
+          "asian",
+          "london"
+        ],
+        "sessions_str": "asian+london",
+        "n_sessions": 2,
+        "traded": 1145,
+        "tpw": 3.67,
+        "win_rate": 0.5231,
+        "profit_factor": 1.097,
+        "total_r": 53.0,
+        "sharpe_r": 0.735
+      },
+      {
+        "sessions": [
+          "asian",
+          "ny_afternoon"
+        ],
+        "sessions_str": "asian+ny_afternoon",
+        "n_sessions": 2,
+        "traded": 1124,
+        "tpw": 3.6,
+        "win_rate": 0.5222,
+        "profit_factor": 1.093,
+        "total_r": 50.0,
+        "sharpe_r": 0.707
+      }
+    ],
+    "best_combo": {
+      "sessions": [
+        "asian"
+      ],
+      "sessions_str": "asian",
+      "n_sessions": 1,
+      "traded": 590,
+      "tpw": 1.89,
+      "win_rate": 0.5373,
+      "profit_factor": 1.161,
+      "total_r": 44.0,
+      "sharpe_r": 1.186
+    }
+  },
+  "XAU_USD": {
+    "use_bias": true,
+    "total_sfps": 2091,
+    "per_session": {
+      "asian": {
+        "label": "",
+        "total_sfps": 314,
+        "traded": 313,
+        "timed_out": 1,
+        "wins": 146,
+        "losses": 167,
+        "win_rate": 0.4665,
+        "avg_pnl_r": -0.0671,
+        "total_r": -21.0,
+        "profit_factor": 0.874,
+        "sharpe_r": -1.066,
+        "avg_bars_held": 5.7
+      },
+      "london_open": {
+        "label": "",
+        "total_sfps": 287,
+        "traded": 287,
+        "timed_out": 0,
+        "wins": 155,
+        "losses": 132,
+        "win_rate": 0.5401,
+        "avg_pnl_r": 0.0801,
+        "total_r": 23.0,
+        "profit_factor": 1.174,
+        "sharpe_r": 1.274,
+        "avg_bars_held": 4.6
+      },
+      "london": {
+        "label": "",
+        "total_sfps": 338,
+        "traded": 338,
+        "timed_out": 0,
+        "wins": 173,
+        "losses": 165,
+        "win_rate": 0.5118,
+        "avg_pnl_r": 0.0237,
+        "total_r": 8.0,
+        "profit_factor": 1.048,
+        "sharpe_r": 0.375,
+        "avg_bars_held": 4.4
+      },
+      "ny_open": {
+        "label": "",
+        "total_sfps": 626,
+        "traded": 618,
+        "timed_out": 8,
+        "wins": 285,
+        "losses": 333,
+        "win_rate": 0.4612,
+        "avg_pnl_r": -0.0777,
+        "total_r": -48.0,
+        "profit_factor": 0.856,
+        "sharpe_r": -1.236,
+        "avg_bars_held": 6.5
+      },
+      "ny_afternoon": {
+        "label": "",
+        "total_sfps": 318,
+        "traded": 317,
+        "timed_out": 1,
+        "wins": 179,
+        "losses": 138,
+        "win_rate": 0.5647,
+        "avg_pnl_r": 0.1293,
+        "total_r": 41.0,
+        "profit_factor": 1.297,
+        "sharpe_r": 2.067,
+        "avg_bars_held": 9.1
+      },
+      "ny_close": {
+        "label": "",
+        "total_sfps": 115,
+        "traded": 115,
+        "timed_out": 0,
+        "wins": 60,
+        "losses": 55,
+        "win_rate": 0.5217,
+        "avg_pnl_r": 0.0435,
+        "total_r": 5.0,
+        "profit_factor": 1.091,
+        "sharpe_r": 0.688,
+        "avg_bars_held": 8.0
+      }
+    },
+    "top_combos": [
+      {
+        "sessions": [
+          "ny_afternoon"
+        ],
+        "sessions_str": "ny_afternoon",
+        "n_sessions": 1,
+        "traded": 317,
+        "tpw": 1.02,
+        "win_rate": 0.5647,
+        "profit_factor": 1.297,
+        "total_r": 41.0,
+        "sharpe_r": 2.067
+      },
+      {
+        "sessions": [
+          "ny_afternoon",
+          "ny_close"
+        ],
+        "sessions_str": "ny_afternoon+ny_close",
+        "n_sessions": 2,
+        "traded": 432,
+        "tpw": 1.38,
+        "win_rate": 0.5532,
+        "profit_factor": 1.238,
+        "total_r": 46.0,
+        "sharpe_r": 1.698
+      },
+      {
+        "sessions": [
+          "london_open",
+          "ny_afternoon"
+        ],
+        "sessions_str": "london_open+ny_afternoon",
+        "n_sessions": 2,
+        "traded": 604,
+        "tpw": 1.94,
+        "win_rate": 0.553,
+        "profit_factor": 1.237,
+        "total_r": 64.0,
+        "sharpe_r": 1.69
+      },
+      {
+        "sessions": [
+          "london_open",
+          "ny_afternoon",
+          "ny_close"
+        ],
+        "sessions_str": "london_open+ny_afternoon+ny_close",
+        "n_sessions": 3,
+        "traded": 719,
+        "tpw": 2.3,
+        "win_rate": 0.548,
+        "profit_factor": 1.212,
+        "total_r": 69.0,
+        "sharpe_r": 1.529
+      },
+      {
+        "sessions": [
+          "london_open"
+        ],
+        "sessions_str": "london_open",
+        "n_sessions": 1,
+        "traded": 287,
+        "tpw": 0.92,
+        "win_rate": 0.5401,
+        "profit_factor": 1.174,
+        "total_r": 23.0,
+        "sharpe_r": 1.274
+      }
+    ],
+    "best_combo": {
+      "sessions": [
+        "ny_afternoon"
+      ],
+      "sessions_str": "ny_afternoon",
+      "n_sessions": 1,
+      "traded": 317,
+      "tpw": 1.02,
+      "win_rate": 0.5647,
+      "profit_factor": 1.297,
+      "total_r": 41.0,
+      "sharpe_r": 2.067
+    }
+  },
+  "BTC_USD": {
+    "use_bias": false,
+    "total_sfps": 4285,
+    "per_session": {
+      "asian": {
+        "label": "",
+        "total_sfps": 502,
+        "traded": 498,
+        "timed_out": 4,
+        "wins": 254,
+        "losses": 244,
+        "win_rate": 0.51,
+        "avg_pnl_r": 0.0201,
+        "total_r": 10.0,
+        "profit_factor": 1.041,
+        "sharpe_r": 0.319,
+        "avg_bars_held": 7.2
+      },
+      "london_open": {
+        "label": "",
+        "total_sfps": 425,
+        "traded": 425,
+        "timed_out": 0,
+        "wins": 197,
+        "losses": 228,
+        "win_rate": 0.4635,
+        "avg_pnl_r": -0.0729,
+        "total_r": -31.0,
+        "profit_factor": 0.864,
+        "sharpe_r": -1.16,
+        "avg_bars_held": 6.3
+      },
+      "london": {
+        "label": "",
+        "total_sfps": 676,
+        "traded": 671,
+        "timed_out": 5,
+        "wins": 328,
+        "losses": 343,
+        "win_rate": 0.4888,
+        "avg_pnl_r": -0.0224,
+        "total_r": -15.0,
+        "profit_factor": 0.956,
+        "sharpe_r": -0.355,
+        "avg_bars_held": 5.2
+      },
+      "ny_open": {
+        "label": "",
+        "total_sfps": 937,
+        "traded": 930,
+        "timed_out": 7,
+        "wins": 439,
+        "losses": 491,
+        "win_rate": 0.472,
+        "avg_pnl_r": -0.0559,
+        "total_r": -52.0,
+        "profit_factor": 0.894,
+        "sharpe_r": -0.889,
+        "avg_bars_held": 6.2
+      },
+      "ny_afternoon": {
+        "label": "",
+        "total_sfps": 941,
+        "traded": 934,
+        "timed_out": 7,
+        "wins": 415,
+        "losses": 519,
+        "win_rate": 0.4443,
+        "avg_pnl_r": -0.1113,
+        "total_r": -104.0,
+        "profit_factor": 0.8,
+        "sharpe_r": -1.778,
+        "avg_bars_held": 7.0
+      },
+      "ny_close": {
+        "label": "",
+        "total_sfps": 401,
+        "traded": 398,
+        "timed_out": 3,
+        "wins": 222,
+        "losses": 176,
+        "win_rate": 0.5578,
+        "avg_pnl_r": 0.1156,
+        "total_r": 46.0,
+        "profit_factor": 1.261,
+        "sharpe_r": 1.845,
+        "avg_bars_held": 5.8
+      }
+    },
+    "top_combos": [
+      {
+        "sessions": [
+          "ny_close"
+        ],
+        "sessions_str": "ny_close",
+        "n_sessions": 1,
+        "traded": 398,
+        "tpw": 1.28,
+        "win_rate": 0.5578,
+        "profit_factor": 1.261,
+        "total_r": 46.0,
+        "sharpe_r": 1.845
+      },
+      {
+        "sessions": [
+          "asian",
+          "ny_close"
+        ],
+        "sessions_str": "asian+ny_close",
+        "n_sessions": 2,
+        "traded": 896,
+        "tpw": 2.87,
+        "win_rate": 0.5312,
+        "profit_factor": 1.133,
+        "total_r": 56.0,
+        "sharpe_r": 0.994
+      },
+      {
+        "sessions": [
+          "london",
+          "ny_close"
+        ],
+        "sessions_str": "london+ny_close",
+        "n_sessions": 2,
+        "traded": 1069,
+        "tpw": 3.43,
+        "win_rate": 0.5145,
+        "profit_factor": 1.06,
+        "total_r": 31.0,
+        "sharpe_r": 0.46
+      },
+      {
+        "sessions": [
+          "asian",
+          "london",
+          "ny_close"
+        ],
+        "sessions_str": "asian+london+ny_close",
+        "n_sessions": 3,
+        "traded": 1567,
+        "tpw": 5.02,
+        "win_rate": 0.5131,
+        "profit_factor": 1.054,
+        "total_r": 41.0,
+        "sharpe_r": 0.415
+      },
+      {
+        "sessions": [
+          "asian"
+        ],
+        "sessions_str": "asian",
+        "n_sessions": 1,
+        "traded": 498,
+        "tpw": 1.6,
+        "win_rate": 0.51,
+        "profit_factor": 1.041,
+        "total_r": 10.0,
+        "sharpe_r": 0.319
+      }
+    ],
+    "best_combo": {
+      "sessions": [
+        "ny_close"
+      ],
+      "sessions_str": "ny_close",
+      "n_sessions": 1,
+      "traded": 398,
+      "tpw": 1.28,
+      "win_rate": 0.5578,
+      "profit_factor": 1.261,
+      "total_r": 46.0,
+      "sharpe_r": 1.845
+    }
+  }
+}
