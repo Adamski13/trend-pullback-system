@@ -10,7 +10,7 @@ OANDA limit: 5,000 candles per request.
 
 import os
 import time
-from datetime import datetime, timezone
+from datetime import datetime
 from pathlib import Path
 
 import pandas as pd
@@ -110,8 +110,9 @@ def download_instrument(symbol: str, granularity: str = "M15",
         return df
 
     minutes_per_bar = GRANULARITY_MINUTES.get(granularity, 15)
-    start_dt = datetime.fromisoformat(start_date).replace(tzinfo=timezone.utc)
-    end_dt   = datetime.fromisoformat(end_date).replace(tzinfo=timezone.utc)
+    # Work with tz-naive datetimes throughout (everything is UTC)
+    start_dt = datetime.fromisoformat(start_date)
+    end_dt   = datetime.fromisoformat(end_date)
 
     # How many bars fit in 5000 candles?
     window_minutes = 5000 * minutes_per_bar
