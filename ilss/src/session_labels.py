@@ -60,14 +60,14 @@ def compute_daily_levels(df: pd.DataFrame) -> pd.DataFrame:
     for that day's trading.
     """
     df = df.copy()
-    df["date"] = df.index.normalize()
+    df["_time"] = df.index          # save DatetimeIndex before merge resets it
+    df["date"]  = df.index.normalize()
 
     daily = (
         df.groupby("date")
         .agg(day_high=("High", "max"), day_low=("Low", "min"))
         .reset_index()
     )
-    # Shift by 1 day to get PREVIOUS day's high/low
     daily["prev_day_high"] = daily["day_high"].shift(1)
     daily["prev_day_low"]  = daily["day_low"].shift(1)
 
@@ -75,7 +75,8 @@ def compute_daily_levels(df: pd.DataFrame) -> pd.DataFrame:
         daily[["date", "prev_day_high", "prev_day_low"]],
         on="date", how="left"
     )
-    df = df.set_index(df.index)   # preserve original index
+    df = df.set_index("_time")
+    df.index.name = None
     df.drop(columns="date", inplace=True)
     return df
 
@@ -91,7 +92,8 @@ def compute_asian_levels(df: pd.DataFrame) -> pd.DataFrame:
     Bars within the Asian session itself get NaN (the session isn't complete yet).
     """
     df = df.copy()
-    df["date"] = df.index.normalize()
+    df["_time"] = df.index
+    df["date"]  = df.index.normalize()
 
     asian_bars = df[df["session"] == "asian"]
     asian_levels = (
@@ -101,8 +103,9 @@ def compute_asian_levels(df: pd.DataFrame) -> pd.DataFrame:
     )
 
     df = df.merge(asian_levels, on="date", how="left")
+    df = df.set_index("_time")
+    df.index.name = None
 
-    # Mask: bars IN the Asian session don't have completed Asian range
     in_asian = df["session"] == "asian"
     df.loc[in_asian, "asian_high"] = np.nan
     df.loc[in_asian, "asian_low"]  = np.nan
