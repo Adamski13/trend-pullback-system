@@ -57,12 +57,13 @@ def fetch_candles_page(symbol: str, granularity: str,
     Returns list of dicts with keys: time, Open, High, Low, Close, Volume.
     Only complete candles are included.
     """
+    # OANDA rejects requests with from + to + count simultaneously.
+    # Use from + to only — OANDA returns up to 5000 candles in the window.
     params = {
         "granularity": granularity,
         "price":       "M",
         "from":        from_dt.strftime("%Y-%m-%dT%H:%M:%SZ"),
         "to":          to_dt.strftime("%Y-%m-%dT%H:%M:%SZ"),
-        "count":       count,
     }
     url  = f"{_base_url()}/v3/instruments/{symbol}/candles"
     resp = requests.get(url, headers=_headers(), params=params, timeout=30)
