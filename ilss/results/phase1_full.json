@@ -1,0 +1,170 @@
+{
+  "NAS100_USD": {
+    "frequency": {
+      "total": 10225,
+      "per_week": 32.8,
+      "pass": true
+    },
+    "bull_outcomes": {
+      "label": "NAS100_USD",
+      "total_sfps": 4945,
+      "traded": 4938,
+      "timed_out": 7,
+      "wins": 2443,
+      "losses": 2495,
+      "win_rate": 0.4947,
+      "avg_pnl_r": -0.0105,
+      "total_r": -52.0,
+      "profit_factor": 0.979,
+      "sharpe_r": -0.167,
+      "avg_bars_held": 6.8
+    }
+  },
+  "SPX500_USD": {
+    "frequency": {
+      "total": 9879,
+      "per_week": 31.7,
+      "pass": true
+    },
+    "bull_outcomes": {
+      "label": "SPX500_USD",
+      "total_sfps": 4761,
+      "traded": 4751,
+      "timed_out": 10,
+      "wins": 2333,
+      "losses": 2418,
+      "win_rate": 0.4911,
+      "avg_pnl_r": -0.0179,
+      "total_r": -85.0,
+      "profit_factor": 0.965,
+      "sharpe_r": -0.284,
+      "avg_bars_held": 6.8
+    }
+  },
+  "UK100_GBP": {
+    "frequency": {
+      "total": 7910,
+      "per_week": 25.4,
+      "pass": true
+    },
+    "bull_outcomes": {
+      "label": "UK100_GBP",
+      "total_sfps": 3685,
+      "traded": 3675,
+      "timed_out": 10,
+      "wins": 1842,
+      "losses": 1833,
+      "win_rate": 0.5012,
+      "avg_pnl_r": 0.0024,
+      "total_r": 9.0,
+      "profit_factor": 1.005,
+      "sharpe_r": 0.039,
+      "avg_bars_held": 6.0
+    }
+  },
+  "EUR_USD": {
+    "frequency": {
+      "total": 9380,
+      "per_week": 30.1,
+      "pass": true
+    },
+    "bull_outcomes": {
+      "label": "EUR_USD",
+      "total_sfps": 4806,
+      "traded": 4790,
+      "timed_out": 16,
+      "wins": 2396,
+      "losses": 2394,
+      "win_rate": 0.5002,
+      "avg_pnl_r": 0.0004,
+      "total_r": 2.0,
+      "profit_factor": 1.001,
+      "sharpe_r": 0.007,
+      "avg_bars_held": 6.1
+    }
+  },
+  "GBP_USD": {
+    "frequency": {
+      "total": 9798,
+      "per_week": 31.4,
+      "pass": true
+    },
+    "bull_outcomes": {
+      "label": "GBP_USD",
+      "total_sfps": 4972,
+      "traded": 4958,
+      "timed_out": 14,
+      "wins": 2418,
+      "losses": 2540,
+      "win_rate": 0.4877,
+      "avg_pnl_r": -0.0246,
+      "total_r": -122.0,
+      "profit_factor": 0.952,
+      "sharpe_r": -0.391,
+      "avg_bars_held": 6.2
+    }
+  },
+  "USD_JPY": {
+    "frequency": {
+      "total": 7725,
+      "per_week": 24.8,
+      "pass": true
+    },
+    "bull_outcomes": {
+      "label": "USD_JPY",
+      "total_sfps": 3584,
+      "traded": 3550,
+      "timed_out": 34,
+      "wins": 1752,
+      "losses": 1798,
+      "win_rate": 0.4935,
+      "avg_pnl_r": -0.013,
+      "total_r": -46.0,
+      "profit_factor": 0.974,
+      "sharpe_r": -0.206,
+      "avg_bars_held": 6.0
+    }
+  },
+  "XAU_USD": {
+    "frequency": {
+      "total": 8736,
+      "per_week": 28.0,
+      "pass": true
+    },
+    "bull_outcomes": {
+      "label": "XAU_USD",
+      "total_sfps": 4221,
+      "traded": 4204,
+      "timed_out": 17,
+      "wins": 2048,
+      "losses": 2156,
+      "win_rate": 0.4872,
+      "avg_pnl_r": -0.0257,
+      "total_r": -108.0,
+      "profit_factor": 0.95,
+      "sharpe_r": -0.408,
+      "avg_bars_held": 6.3
+    }
+  },
+  "BTC_USD": {
+    "frequency": {
+      "total": 8317,
+      "per_week": 26.7,
+      "pass": true
+    },
+    "bull_outcomes": {
+      "label": "BTC_USD",
+      "total_sfps": 4285,
+      "traded": 4259,
+      "timed_out": 26,
+      "wins": 2052,
+      "losses": 2207,
+      "win_rate": 0.4818,
+      "avg_pnl_r": -0.0364,
+      "total_r": -155.0,
+      "profit_factor": 0.93,
+      "sharpe_r": -0.578,
+      "avg_bars_held": 6.4
+    }
+  }
+}

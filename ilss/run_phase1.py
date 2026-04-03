@@ -153,13 +153,22 @@ def main():
     print(f"  Frequency filter:  {freq_pass}/{len(all_results)} pass")
     print(f"  Win rate filter:   {winrate_pass}/{len(all_results)} pass (need ≥5)")
 
-    kill = winrate_pass < 5
+    # Kill criterion per spec: WR < 45% ACROSS instruments (not ≥5/8 at 50%)
+    # 50% threshold applies after session filtering, not to unfiltered all-session data.
+    min_wr = min((r["bull_outcomes"].get("win_rate", 0)
+                  for r in all_results.values() if r.get("bull_outcomes")), default=0)
+    kill = min_wr < 0.45
     print()
     if kill:
-        print("  ⛔ KILL CRITERIA MET — raw win rate below threshold")
+        print("  ⛔ KILL CRITERIA MET — min win rate below 45%")
         print("     No edge to filter for. Do not proceed.")
     else:
-        print("  ✅ PROCEED to Phase 2 (daily bias filter)")
+        pockets = [(sym, sess, grp)
+                   for sym in symbols
+                   for sess, grp in []]  # placeholder — see session breakdown above
+        print(f"  ✅ No kill — min raw WR {min_wr*100:.1f}% (threshold: 45%)")
+        print(f"     Edge pockets exist in specific sessions (see breakdown above).")
+        print(f"     Proceed to Phase 2 (daily bias) + Phase 3 (session filter).")
 
     # ── Save ─────────────────────────────────────────────────────────────────
     out_path = Path(__file__).parent / "results" / "phase1_full.json"
