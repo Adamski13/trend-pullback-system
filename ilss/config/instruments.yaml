@@ -1,0 +1,72 @@
+# ILSS Instrument Configuration
+# All 8 candidates — each must pass the qualification protocol before inclusion
+
+instruments:
+  # ── Indices ─────────────────────────────────────────────────────────────────
+  - symbol: NAS100_USD
+    label: Nasdaq 100
+    asset_class: index
+    currency: USD
+    primary_window: ny_open       # 12:00–15:00 UTC
+    secondary_window: ny_afternoon
+    spread_pts: 1.0
+    typical_atr_pts: 150          # rough estimate for min sweep calc
+
+  - symbol: SPX500_USD
+    label: S&P 500
+    asset_class: index
+    currency: USD
+    primary_window: ny_open
+    secondary_window: ny_afternoon
+    spread_pts: 0.4
+
+  - symbol: UK100_GBP
+    label: FTSE 100
+    asset_class: index
+    currency: GBP
+    primary_window: london_open   # 07:00–09:00 UTC
+    secondary_window: ny_open
+    spread_pts: 1.0
+
+  # ── Forex ────────────────────────────────────────────────────────────────────
+  - symbol: EUR_USD
+    label: Euro/Dollar
+    asset_class: forex
+    currency: USD
+    primary_window: london_open
+    secondary_window: ny_open
+    spread_pts: 0.00014           # 1.4 pips
+
+  - symbol: GBP_USD
+    label: Pound/Dollar
+    asset_class: forex
+    currency: USD
+    primary_window: london_open
+    secondary_window: ny_open
+    spread_pts: 0.00018           # 1.8 pips
+
+  - symbol: USD_JPY
+    label: Dollar/Yen
+    asset_class: forex
+    currency: JPY
+    primary_window: asian         # 00:00–03:00 UTC
+    secondary_window: london_open
+    spread_pts: 0.014             # 1.4 pips
+
+  # ── Commodities ──────────────────────────────────────────────────────────────
+  - symbol: XAU_USD
+    label: Gold
+    asset_class: commodity
+    currency: USD
+    primary_window: london_open
+    secondary_window: ny_open
+    spread_pts: 0.38
+
+  # ── Crypto ───────────────────────────────────────────────────────────────────
+  - symbol: BTC_USD
+    label: Bitcoin
+    asset_class: crypto
+    currency: USD
+    primary_window: ny_open
+    secondary_window: london_open
+    spread_pts: 40.0              # variable, ~30–50

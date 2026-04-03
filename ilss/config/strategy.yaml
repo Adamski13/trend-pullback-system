@@ -1,0 +1,80 @@
+# ILSS Strategy Parameters
+# All marked (TEST) are hypotheses — validated in the relevant phase
+
+# ── Daily Bias (Layer 1) ──────────────────────────────────────────────────────
+bias:
+  source: tps_v2_ewmac           # daily EWMAC forecast from TPS v2
+  long_threshold: 5              # (TEST) forecast >= 5 → eligible for longs
+  mode: long_only                # short_only / both tested in Phase 2+
+
+# ── Key Levels (Layer 2) ─────────────────────────────────────────────────────
+levels:
+  primary:
+    - prev_day_high
+    - prev_day_low
+    - asian_session_high
+    - asian_session_low
+  secondary:                     # Phase 2+ only
+    - prev_week_high
+    - prev_week_low
+    - session_high_aged_2h
+    - session_low_aged_2h
+
+# ── SFP Detection (Layer 3) ──────────────────────────────────────────────────
+sfp:
+  entry_timeframe: M15           # 15-minute candles
+  sweep_min_depth: 0.25          # (TEST) sweep must be > 0.25 × ATR(14)
+  sweep_max_depth: 1.5           # (TEST) sweep must be < 1.5 × ATR(14)
+  atr_period: 14
+
+# ── Session Windows ───────────────────────────────────────────────────────────
+sessions:
+  asian:
+    start_utc: "00:00"
+    end_utc:   "07:00"
+  london_open:
+    start_utc: "07:00"
+    end_utc:   "09:00"
+  london:
+    start_utc: "09:00"
+    end_utc:   "12:00"
+  ny_open:
+    start_utc: "12:00"
+    end_utc:   "15:00"
+  ny_afternoon:
+    start_utc: "15:00"
+    end_utc:   "19:00"
+  ny_close:
+    start_utc: "19:00"
+    end_utc:   "21:00"
+
+# ── Exit Options (Layer 4) ────────────────────────────────────────────────────
+exit:
+  stop_buffer_atr: 0.25          # stop = sweep_low - 0.25×ATR below wick
+  options:                       # all tested in Phase 4
+    - opposite_level
+    - session_close
+    - atr_trail                  # trail at 1.5×ATR from highest price
+    - time_stop                  # close after N hours (TEST: 2, 4, 6)
+  time_stop_hours: 4             # (TEST)
+  atr_trail_multiplier: 1.5      # (TEST)
+
+# ── Position Sizing ───────────────────────────────────────────────────────────
+sizing:
+  risk_pct: 0.01                 # 1% risk per trade
+  max_concurrent: 2              # max open positions across all instruments
+  max_daily_trades: 2            # hard cap per day
+
+# ── Risk Management ───────────────────────────────────────────────────────────
+risk:
+  daily_loss_limit_pct: 0.03     # halt if day P&L hits -3%
+  weekly_loss_limit_pct: 0.05    # halt if week P&L hits -5%
+  news_blackout_minutes: 15      # no entries 15min before/after high-impact news
+
+# ── Data ─────────────────────────────────────────────────────────────────────
+data:
+  start_date: "2020-01-01"
+  end_date:   "2025-12-31"
+  intraday_granularity: M15
+  daily_granularity: D
+  candles_per_request: 5000      # OANDA API limit
