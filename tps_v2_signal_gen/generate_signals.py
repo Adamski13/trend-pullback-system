@@ -28,6 +28,7 @@ import pandas as pd
 import yaml
 
 from oanda_client import OandaClient
+from telegram_notify import TelegramNotifier
 from indicators import (
     combined_forecast, regime_filter,
     instrument_volatility, sma, ewmac_forecast,
@@ -376,6 +377,12 @@ def main():
         state[sym]["avg_pos"] = round(0.95 * s["avg_pos"] + 0.05 * abs(new_cur), 4)
 
     save_state(state)
+
+    # ── telegram notification ──────────────────────────────────────────────────
+    notifier = TelegramNotifier()
+    if notifier.enabled:
+        nav = account["nav"] if account else capital
+        notifier.send_signal_report(nav, signals, env)
 
 
 if __name__ == "__main__":

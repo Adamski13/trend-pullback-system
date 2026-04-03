@@ -82,7 +82,7 @@ class TelegramNotifier:
             bar = '█' * filled + '░' * (20 - filled)
             
             # Regime emoji
-            regime = '🟢' if s.get('regime', False) else '🔴'
+            regime = '🟢' if s.get('regime') == 'BULL' else '🔴'
             
             # Action
             action = s.get('action', 'HOLD')
@@ -105,7 +105,7 @@ class TelegramNotifier:
             
             lines.append(f"*{s.get('label', s.get('instrument', '?'))}* {regime}")
             lines.append(f"  F: {fc:.1f}/20  `{bar}`")
-            lines.append(f"  Pos: {s.get('current', 0):.0f} → {s.get('target', 0):.0f}")
+            lines.append(f"  Pos: {s.get('current_units', 0):.0f} → {s.get('target_units', 0):.0f}")
             lines.append(f"  {action_str}")
             lines.append(f"")
         
