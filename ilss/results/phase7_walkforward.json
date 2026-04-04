@@ -29,7 +29,7 @@
     "BTC_USD"
   ],
   "core_pass": 4,
-  "avg_core_wfe": 1.206,
+  "avg_core_wfe": 1.457,
   "any_core_all_fail": false,
   "overall_pass": true,
   "instruments": {
@@ -39,51 +39,51 @@
         {
           "window": "W1",
           "train_end": "2022-12-31",
-          "is_pf": 0.938,
-          "oos_pf": 1.151,
+          "is_pf": 0.974,
+          "oos_pf": 1.346,
           "selected_sessions": [
             "london_open"
           ],
           "selected_bars": 16,
-          "oos_trades": 70,
-          "oos_wr": 0.3571,
-          "oos_total_r": 7.06,
-          "oos_tpw": 1.35
+          "oos_trades": 27,
+          "oos_wr": 0.2963,
+          "oos_total_r": 6.88,
+          "oos_tpw": 0.52
         },
         {
           "window": "W2",
           "train_end": "2023-12-31",
-          "is_pf": 1.012,
-          "oos_pf": 1.136,
+          "is_pf": 1.088,
+          "oos_pf": 1.887,
           "selected_sessions": [
             "london_open"
           ],
           "selected_bars": 16,
-          "oos_trades": 86,
-          "oos_wr": 0.3488,
-          "oos_total_r": 8.08,
-          "oos_tpw": 1.65
+          "oos_trades": 41,
+          "oos_wr": 0.439,
+          "oos_total_r": 21.19,
+          "oos_tpw": 0.79
         },
         {
           "window": "W3",
           "train_end": "2024-12-31",
-          "is_pf": 1.05,
-          "oos_pf": 1.551,
+          "is_pf": 1.303,
+          "oos_pf": 1.931,
           "selected_sessions": [
             "london_open"
           ],
           "selected_bars": 16,
-          "oos_trades": 71,
-          "oos_wr": 0.4789,
-          "oos_total_r": 20.79,
-          "oos_tpw": 1.37
+          "oos_trades": 30,
+          "oos_wr": 0.5,
+          "oos_total_r": 13.97,
+          "oos_tpw": 0.58
         }
       ],
-      "avg_oos_pf": 1.279,
-      "std_oos_pf": 0.192,
-      "avg_is_pf": 1.0,
-      "wf_efficiency": 1.279,
-      "pct_degradation": -27.9,
+      "avg_oos_pf": 1.721,
+      "std_oos_pf": 0.266,
+      "avg_is_pf": 1.122,
+      "wf_efficiency": 1.535,
+      "pct_degradation": -53.5,
       "n_windows_above": 3,
       "consistent": "True",
       "all_fail": false
@@ -94,51 +94,51 @@
         {
           "window": "W1",
           "train_end": "2022-12-31",
-          "is_pf": 0.965,
-          "oos_pf": 0.75,
+          "is_pf": 1.29,
+          "oos_pf": 0.463,
           "selected_sessions": [
             "london"
           ],
           "selected_bars": 8,
-          "oos_trades": 72,
-          "oos_wr": 0.2917,
-          "oos_total_r": -11.27,
-          "oos_tpw": 1.38
+          "oos_trades": 34,
+          "oos_wr": 0.2647,
+          "oos_total_r": -12.03,
+          "oos_tpw": 0.65
         },
         {
           "window": "W2",
           "train_end": "2023-12-31",
-          "is_pf": 0.889,
-          "oos_pf": 1.117,
+          "is_pf": 0.985,
+          "oos_pf": 1.425,
           "selected_sessions": [
             "london"
           ],
           "selected_bars": 8,
-          "oos_trades": 99,
-          "oos_wr": 0.4343,
-          "oos_total_r": 6.2,
-          "oos_tpw": 1.9
+          "oos_trades": 56,
+          "oos_wr": 0.4643,
+          "oos_total_r": 12.23,
+          "oos_tpw": 1.07
         },
         {
           "window": "W3",
           "train_end": "2024-12-31",
-          "is_pf": 0.956,
-          "oos_pf": 1.764,
+          "is_pf": 1.126,
+          "oos_pf": 2.572,
           "selected_sessions": [
             "london"
           ],
           "selected_bars": 8,
-          "oos_trades": 60,
-          "oos_wr": 0.55,
-          "oos_total_r": 18.69,
-          "oos_tpw": 1.15
+          "oos_trades": 23,
+          "oos_wr": 0.6522,
+          "oos_total_r": 9.17,
+          "oos_tpw": 0.44
         }
       ],
-      "avg_oos_pf": 1.21,
-      "std_oos_pf": 0.419,
-      "avg_is_pf": 0.937,
-      "wf_efficiency": 1.292,
-      "pct_degradation": -29.2,
+      "avg_oos_pf": 1.487,
+      "std_oos_pf": 0.862,
+      "avg_is_pf": 1.134,
+      "wf_efficiency": 1.311,
+      "pct_degradation": -31.1,
       "n_windows_above": 2,
       "consistent": "True",
       "all_fail": false
@@ -149,53 +149,53 @@
         {
           "window": "W1",
           "train_end": "2022-12-31",
-          "is_pf": 1.176,
-          "oos_pf": 1.193,
+          "is_pf": 1.068,
+          "oos_pf": 1.774,
           "selected_sessions": [
             "ny_open"
           ],
           "selected_bars": 8,
-          "oos_trades": 34,
-          "oos_wr": 0.4706,
-          "oos_total_r": 3.27,
-          "oos_tpw": 0.65
+          "oos_trades": 13,
+          "oos_wr": 0.4615,
+          "oos_total_r": 3.94,
+          "oos_tpw": 0.25
         },
         {
           "window": "W2",
           "train_end": "2023-12-31",
-          "is_pf": 1.179,
-          "oos_pf": 0.639,
+          "is_pf": 1.136,
+          "oos_pf": 0.689,
           "selected_sessions": [
             "ny_open"
           ],
           "selected_bars": 8,
-          "oos_trades": 102,
+          "oos_trades": 51,
           "oos_wr": 0.3333,
-          "oos_total_r": -23.42,
-          "oos_tpw": 1.96
+          "oos_total_r": -10.45,
+          "oos_tpw": 0.98
         },
         {
           "window": "W3",
           "train_end": "2024-12-31",
-          "is_pf": 0.971,
-          "oos_pf": 1.172,
+          "is_pf": 0.962,
+          "oos_pf": 0.706,
           "selected_sessions": [
             "ny_open"
           ],
           "selected_bars": 8,
-          "oos_trades": 96,
-          "oos_wr": 0.4271,
-          "oos_total_r": 9.14,
-          "oos_tpw": 1.85
+          "oos_trades": 41,
+          "oos_wr": 0.3902,
+          "oos_total_r": -6.78,
+          "oos_tpw": 0.79
         }
       ],
-      "avg_oos_pf": 1.001,
-      "std_oos_pf": 0.256,
-      "avg_is_pf": 1.109,
-      "wf_efficiency": 0.903,
-      "pct_degradation": 9.7,
-      "n_windows_above": 2,
-      "consistent": "False",
+      "avg_oos_pf": 1.056,
+      "std_oos_pf": 0.508,
+      "avg_is_pf": 1.055,
+      "wf_efficiency": 1.001,
+      "pct_degradation": -0.1,
+      "n_windows_above": 1,
+      "consistent": false,
       "all_fail": false
     },
     "EUR_USD": {
@@ -204,51 +204,51 @@
         {
           "window": "W1",
           "train_end": "2022-12-31",
-          "is_pf": 1.343,
-          "oos_pf": 0.938,
+          "is_pf": 1.774,
+          "oos_pf": 0.648,
           "selected_sessions": [
             "asian"
           ],
           "selected_bars": 24,
-          "oos_trades": 78,
-          "oos_wr": 0.2051,
-          "oos_total_r": -4.02,
-          "oos_tpw": 1.5
+          "oos_trades": 38,
+          "oos_wr": 0.1316,
+          "oos_total_r": -12.2,
+          "oos_tpw": 0.73
         },
         {
           "window": "W2",
           "train_end": "2023-12-31",
-          "is_pf": 1.156,
-          "oos_pf": 1.653,
+          "is_pf": 1.186,
+          "oos_pf": 1.386,
           "selected_sessions": [
             "asian"
           ],
           "selected_bars": 24,
-          "oos_trades": 34,
-          "oos_wr": 0.2941,
-          "oos_total_r": 16.14,
-          "oos_tpw": 0.65
+          "oos_trades": 19,
+          "oos_wr": 0.3684,
+          "oos_total_r": 4.86,
+          "oos_tpw": 0.36
         },
         {
           "window": "W3",
           "train_end": "2024-12-31",
-          "is_pf": 1.23,
-          "oos_pf": 0.669,
+          "is_pf": 1.218,
+          "oos_pf": 0.547,
           "selected_sessions": [
             "asian"
           ],
           "selected_bars": 24,
-          "oos_trades": 54,
-          "oos_wr": 0.2222,
-          "oos_total_r": -14.58,
-          "oos_tpw": 1.04
+          "oos_trades": 26,
+          "oos_wr": 0.1923,
+          "oos_total_r": -9.98,
+          "oos_tpw": 0.5
         }
       ],
-      "avg_oos_pf": 1.087,
-      "std_oos_pf": 0.415,
-      "avg_is_pf": 1.243,
-      "wf_efficiency": 0.874,
-      "pct_degradation": 12.6,
+      "avg_oos_pf": 0.86,
+      "std_oos_pf": 0.374,
+      "avg_is_pf": 1.393,
+      "wf_efficiency": 0.618,
+      "pct_degradation": 38.2,
       "n_windows_above": 1,
       "consistent": false,
       "all_fail": false
@@ -259,54 +259,54 @@
         {
           "window": "W1",
           "train_end": "2022-12-31",
-          "is_pf": 1.156,
-          "oos_pf": 0.851,
+          "is_pf": 1.263,
+          "oos_pf": 0.714,
           "selected_sessions": [
             "london_open",
             "ny_close"
           ],
           "selected_bars": 8,
-          "oos_trades": 111,
-          "oos_wr": 0.3874,
-          "oos_total_r": -9.87,
-          "oos_tpw": 2.13
+          "oos_trades": 64,
+          "oos_wr": 0.375,
+          "oos_total_r": -11.15,
+          "oos_tpw": 1.23
         },
         {
           "window": "W2",
           "train_end": "2023-12-31",
-          "is_pf": 1.023,
-          "oos_pf": 1.706,
+          "is_pf": 0.979,
+          "oos_pf": 2.89,
           "selected_sessions": [
             "london_open",
             "ny_close"
           ],
           "selected_bars": 8,
-          "oos_trades": 84,
-          "oos_wr": 0.5476,
-          "oos_total_r": 26.52,
-          "oos_tpw": 1.61
+          "oos_trades": 36,
+          "oos_wr": 0.6944,
+          "oos_total_r": 20.94,
+          "oos_tpw": 0.69
         },
         {
           "window": "W3",
           "train_end": "2024-12-31",
-          "is_pf": 1.158,
-          "oos_pf": 2.229,
+          "is_pf": 1.224,
+          "oos_pf": 2.59,
           "selected_sessions": [
             "london_open",
             "ny_close"
           ],
           "selected_bars": 8,
-          "oos_trades": 67,
-          "oos_wr": 0.5075,
-          "oos_total_r": 34.94,
-          "oos_tpw": 1.29
+          "oos_trades": 34,
+          "oos_wr": 0.5882,
+          "oos_total_r": 20.62,
+          "oos_tpw": 0.65
         }
       ],
-      "avg_oos_pf": 1.595,
-      "std_oos_pf": 0.568,
-      "avg_is_pf": 1.112,
-      "wf_efficiency": 1.434,
-      "pct_degradation": -43.4,
+      "avg_oos_pf": 2.065,
+      "std_oos_pf": 0.963,
+      "avg_is_pf": 1.155,
+      "wf_efficiency": 1.787,
+      "pct_degradation": -78.7,
       "n_windows_above": 2,
       "consistent": "True",
       "all_fail": false
@@ -317,51 +317,51 @@
         {
           "window": "W1",
           "train_end": "2022-12-31",
-          "is_pf": 1.034,
-          "oos_pf": 2.253,
+          "is_pf": 1.099,
+          "oos_pf": 1.743,
           "selected_sessions": [
             "asian"
           ],
           "selected_bars": 16,
-          "oos_trades": 92,
-          "oos_wr": 0.4674,
-          "oos_total_r": 60.25,
-          "oos_tpw": 1.77
+          "oos_trades": 38,
+          "oos_wr": 0.4211,
+          "oos_total_r": 16.48,
+          "oos_tpw": 0.73
         },
         {
           "window": "W2",
           "train_end": "2023-12-31",
-          "is_pf": 1.28,
-          "oos_pf": 1.822,
+          "is_pf": 1.222,
+          "oos_pf": 2.615,
           "selected_sessions": [
             "asian"
           ],
           "selected_bars": 16,
-          "oos_trades": 98,
-          "oos_wr": 0.4898,
-          "oos_total_r": 40.2,
-          "oos_tpw": 1.88
+          "oos_trades": 39,
+          "oos_wr": 0.5641,
+          "oos_total_r": 24.73,
+          "oos_tpw": 0.75
         },
         {
           "window": "W3",
           "train_end": "2024-12-31",
-          "is_pf": 1.373,
-          "oos_pf": 1.138,
+          "is_pf": 1.385,
+          "oos_pf": 1.448,
           "selected_sessions": [
             "asian"
           ],
           "selected_bars": 16,
-          "oos_trades": 110,
-          "oos_wr": 0.3727,
-          "oos_total_r": 9.68,
-          "oos_tpw": 2.12
+          "oos_trades": 51,
+          "oos_wr": 0.3922,
+          "oos_total_r": 14.27,
+          "oos_tpw": 0.98
         }
       ],
-      "avg_oos_pf": 1.738,
-      "std_oos_pf": 0.459,
-      "avg_is_pf": 1.229,
-      "wf_efficiency": 1.414,
-      "pct_degradation": -41.4,
+      "avg_oos_pf": 1.935,
+      "std_oos_pf": 0.495,
+      "avg_is_pf": 1.235,
+      "wf_efficiency": 1.567,
+      "pct_degradation": -56.7,
       "n_windows_above": 3,
       "consistent": "True",
       "all_fail": false
@@ -372,52 +372,52 @@
         {
           "window": "W1",
           "train_end": "2022-12-31",
-          "is_pf": 1.296,
-          "oos_pf": 1.313,
+          "is_pf": 0.893,
+          "oos_pf": 1.489,
           "selected_sessions": [
             "ny_afternoon"
           ],
           "selected_bars": 8,
-          "oos_trades": 75,
-          "oos_wr": 0.4667,
-          "oos_total_r": 10.9,
-          "oos_tpw": 1.44
+          "oos_trades": 39,
+          "oos_wr": 0.4872,
+          "oos_total_r": 8.3,
+          "oos_tpw": 0.75
         },
         {
           "window": "W2",
           "train_end": "2023-12-31",
-          "is_pf": 1.303,
-          "oos_pf": 1.002,
+          "is_pf": 1.11,
+          "oos_pf": 1.608,
           "selected_sessions": [
             "ny_afternoon"
           ],
           "selected_bars": 8,
-          "oos_trades": 73,
-          "oos_wr": 0.4521,
-          "oos_total_r": 0.06,
-          "oos_tpw": 1.4
+          "oos_trades": 33,
+          "oos_wr": 0.5455,
+          "oos_total_r": 5.11,
+          "oos_tpw": 0.63
         },
         {
           "window": "W3",
           "train_end": "2024-12-31",
-          "is_pf": 1.221,
-          "oos_pf": 1.6,
+          "is_pf": 1.186,
+          "oos_pf": 1.748,
           "selected_sessions": [
             "ny_afternoon"
           ],
           "selected_bars": 8,
-          "oos_trades": 55,
-          "oos_wr": 0.6,
-          "oos_total_r": 11.5,
-          "oos_tpw": 1.06
+          "oos_trades": 27,
+          "oos_wr": 0.6667,
+          "oos_total_r": 5.91,
+          "oos_tpw": 0.52
         }
       ],
-      "avg_oos_pf": 1.305,
-      "std_oos_pf": 0.244,
-      "avg_is_pf": 1.273,
-      "wf_efficiency": 1.025,
-      "pct_degradation": -2.5,
-      "n_windows_above": 2,
+      "avg_oos_pf": 1.615,
+      "std_oos_pf": 0.106,
+      "avg_is_pf": 1.063,
+      "wf_efficiency": 1.519,
+      "pct_degradation": -51.9,
+      "n_windows_above": 3,
       "consistent": "True",
       "all_fail": false
     },
@@ -427,51 +427,51 @@
         {
           "window": "W1",
           "train_end": "2022-12-31",
-          "is_pf": 1.508,
-          "oos_pf": 0.835,
+          "is_pf": 1.492,
+          "oos_pf": 0.939,
           "selected_sessions": [
             "ny_close"
           ],
           "selected_bars": 24,
-          "oos_trades": 57,
-          "oos_wr": 0.2807,
-          "oos_total_r": -7.35,
-          "oos_tpw": 1.1
+          "oos_trades": 29,
+          "oos_wr": 0.3448,
+          "oos_total_r": -1.22,
+          "oos_tpw": 0.56
         },
         {
           "window": "W2",
           "train_end": "2023-12-31",
-          "is_pf": 1.357,
-          "oos_pf": 1.179,
+          "is_pf": 1.362,
+          "oos_pf": 1.484,
           "selected_sessions": [
             "ny_close"
           ],
           "selected_bars": 24,
-          "oos_trades": 68,
-          "oos_wr": 0.3824,
-          "oos_total_r": 7.97,
-          "oos_tpw": 1.3
+          "oos_trades": 30,
+          "oos_wr": 0.4,
+          "oos_total_r": 8.55,
+          "oos_tpw": 0.58
         },
         {
           "window": "W3",
           "train_end": "2024-12-31",
-          "is_pf": 1.325,
-          "oos_pf": 1.965,
+          "is_pf": 1.383,
+          "oos_pf": 1.625,
           "selected_sessions": [
             "ny_close"
           ],
           "selected_bars": 24,
-          "oos_trades": 68,
-          "oos_wr": 0.4706,
-          "oos_total_r": 36.8,
-          "oos_tpw": 1.31
+          "oos_trades": 37,
+          "oos_wr": 0.4595,
+          "oos_total_r": 13.17,
+          "oos_tpw": 0.71
         }
       ],
-      "avg_oos_pf": 1.326,
-      "std_oos_pf": 0.473,
-      "avg_is_pf": 1.397,
-      "wf_efficiency": 0.95,
-      "pct_degradation": 5.0,
+      "avg_oos_pf": 1.349,
+      "std_oos_pf": 0.296,
+      "avg_is_pf": 1.412,
+      "wf_efficiency": 0.955,
+      "pct_degradation": 4.5,
       "n_windows_above": 2,
       "consistent": "True",
       "all_fail": false

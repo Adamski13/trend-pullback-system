@@ -168,12 +168,15 @@ def run_instrument_wfa(
     strat_cfg: dict,
     windows: list[dict],
     fixed_params: bool = False,
+    sweep_min: float | None = None,
+    sweep_max: float | None = None,
 ) -> dict:
     """Run walk-forward analysis for one instrument across all windows.
 
     fixed_params=True: use Phase 3 sessions + Phase 4 time stop as fixed priors.
                        Only evaluates OOS P&L — no IS re-optimisation.
     fixed_params=False: full IS grid search (re-fits session + bars each window).
+    sweep_min/max: override SFP sweep depth filter (None = use strategy.yaml values).
     """
     friction = FRICTION_R.get(symbol, 0.07)
 
@@ -187,8 +190,8 @@ def run_instrument_wfa(
     enriched = prepare(df_m15, atr_period=sfp_cfg["atr_period"])
     all_sfps = detect_sfps(
         enriched, symbol=symbol,
-        min_sweep_atr=sfp_cfg["sweep_min_depth"],
-        max_sweep_atr=sfp_cfg["sweep_max_depth"],
+        min_sweep_atr=sweep_min if sweep_min is not None else sfp_cfg["sweep_min_depth"],
+        max_sweep_atr=sweep_max if sweep_max is not None else sfp_cfg["sweep_max_depth"],
         stop_buffer_atr=strat_cfg["exit"]["stop_buffer_atr"],
         active_sessions=None,
     )
@@ -317,6 +320,10 @@ def main():
     parser.add_argument("--symbol", type=str, default=None)
     parser.add_argument("--fixed-params", action="store_true",
                         help="Lock Phase 3 sessions + Phase 4 exits; no IS re-optimisation")
+    parser.add_argument("--sweep-min", type=float, default=None,
+                        help="Override SFP min sweep depth (ATR multiple)")
+    parser.add_argument("--sweep-max", type=float, default=None,
+                        help="Override SFP max sweep depth (ATR multiple)")
     args = parser.parse_args()
 
     cfg_path = Path(__file__).parent / "config"
@@ -341,6 +348,10 @@ def main():
         print("  Mode: FIXED PARAMS — Phase 3 sessions + Phase 4 exits (no IS re-fit)")
     else:
         print("  IS optimisation: grid search over sessions × time_stop_bars {8,16,24}")
+    if args.sweep_min is not None or args.sweep_max is not None:
+        lo = args.sweep_min or 0.25
+        hi = args.sweep_max or 1.5
+        print(f"  Sweep depth override: {lo}–{hi}× ATR")
     print("  OOS: apply params, evaluate on held-out data")
     print("=" * 76)
 
@@ -352,7 +363,9 @@ def main():
 
         print(f"\n  ── {symbol} {'─' * (60 - len(symbol))}")
         r = run_instrument_wfa(symbol, sfp_cfg, strat_cfg, WINDOWS,
-                               fixed_params=args.fixed_params)
+                               fixed_params=args.fixed_params,
+                               sweep_min=args.sweep_min,
+                               sweep_max=args.sweep_max)
         all_results[symbol] = r
 
         if "error" in r:

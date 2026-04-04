@@ -23,8 +23,8 @@ levels:
 # ── SFP Detection (Layer 3) ──────────────────────────────────────────────────
 sfp:
   entry_timeframe: M15           # 15-minute candles
-  sweep_min_depth: 0.25          # (TEST) sweep must be > 0.25 × ATR(14)
-  sweep_max_depth: 1.5           # (TEST) sweep must be < 1.5 × ATR(14)
+  sweep_min_depth: 0.4           # validated: 0.4–0.8 sweet spot (E2 enhancement)
+  sweep_max_depth: 0.8           # validated: mid-depth sweeps = real stop clusters
   atr_period: 14
 
 # ── Session Windows ───────────────────────────────────────────────────────────
