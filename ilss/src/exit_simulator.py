@@ -316,11 +316,15 @@ def simulate_session_close(
 def simulate_time_stop(
     sfps: pd.DataFrame,
     price_df: pd.DataFrame,
-    hold_bars: int = 16,   # 16 × 15min = 4h
+    hold_bars: int = 16,      # 16 × 15min = 4h
+    target_r: float | None = None,  # optional profit target; if hit before clock runs out, exit early
 ) -> pd.DataFrame:
     """
-    Hold for exactly hold_bars bars, exit at close (or stop if hit first).
-    pnl_r is continuous.
+    Hold for exactly hold_bars bars, exit at close (or stop / target if hit first).
+
+    target_r: if set, checks for an early exit at entry ± target_r × stop_dist
+              on every bar within the time window. Stop is still checked first.
+              pnl_r is continuous (target hit → +target_r, stop → -1.0, time → partial).
     """
     if sfps.empty:
         return sfps.copy()
@@ -337,6 +341,11 @@ def simulate_time_stop(
         stop_dist = row["stop_distance"]
         direction = row["direction"]
 
+        target = None
+        if target_r is not None and stop_dist > 0:
+            target = (entry + target_r * stop_dist if direction == "bull"
+                      else entry - target_r * stop_dist)
+
         start_idx = index_map.get(sfp_time)
         if start_idx is None:
             outcomes.append("time_close"); bars_held.append(0)
@@ -352,6 +361,7 @@ def simulate_time_stop(
             bar    = price_df.iloc[j]
             n_bars += 1
 
+            # Stop checked first (conservative)
             if direction == "bull" and bar["Low"] <= stop:
                 outcome    = "loss"
                 exit_price = stop
@@ -360,6 +370,17 @@ def simulate_time_stop(
                 outcome    = "loss"
                 exit_price = stop
                 break
+
+            # Profit target (early exit within time window)
+            if target is not None:
+                if direction == "bull" and bar["High"] >= target:
+                    outcome    = "win"
+                    exit_price = target
+                    break
+                elif direction == "bear" and bar["Low"] <= target:
+                    outcome    = "win"
+                    exit_price = target
+                    break
 
             # Last bar in window — exit at close
             if j == end_idx - 1:
@@ -371,6 +392,8 @@ def simulate_time_stop(
 
         if outcome == "loss":
             pnl = -1.0
+        elif outcome == "win":
+            pnl = target_r  # exact target hit
         elif direction == "bull":
             pnl = _pnl_r_bull(exit_price, entry, stop_dist)
         else:
