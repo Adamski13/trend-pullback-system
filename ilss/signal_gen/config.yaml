@@ -1,0 +1,74 @@
+# ILSS Signal Generator — Locked Parameters
+# All parameters validated through Phase 1–7 + enhancement testing
+
+# ── Instruments ────────────────────────────────────────────────────────────────
+instruments:
+  - symbol:    NAS100_USD
+    label:     NAS100
+    sessions:  [london_open]
+    hold_bars: 16          # 4h
+    bias_filter: true
+    execution: live        # place orders via OANDA
+
+  - symbol:    GBP_USD
+    label:     GBP/USD
+    sessions:  [london_open, ny_close]
+    hold_bars: 8           # 2h
+    bias_filter: true
+    execution: live
+
+  - symbol:    USD_JPY
+    label:     USD/JPY
+    sessions:  [asian]
+    hold_bars: 16          # 4h
+    bias_filter: true
+    execution: live
+
+  - symbol:    XAU_USD
+    label:     XAU/USD (Gold)
+    sessions:  [ny_afternoon]
+    hold_bars: 8           # 2h
+    bias_filter: true
+    execution: live
+
+  - symbol:    BTC_USD
+    label:     BTC/USD
+    sessions:  [ny_close]
+    hold_bars: 24          # 6h
+    bias_filter: false     # no EWMAC filter — validated in Phase 2
+    execution: signal_only # alert only — manual execution on Hyperliquid
+
+# ── SFP Detection (E2 validated) ──────────────────────────────────────────────
+sfp:
+  sweep_min_depth: 0.4     # validated: 0.4–0.8× ATR sweet spot
+  sweep_max_depth: 0.8
+  stop_buffer_atr: 0.25
+  atr_period:      14
+
+# ── Daily Bias ─────────────────────────────────────────────────────────────────
+bias:
+  long_threshold: 5.0      # EWMAC forecast >= 5 → bull day
+  ewmac_pairs:             # Carver standard three
+    - [8,  32]
+    - [16, 64]
+    - [32, 128]
+  vol_lookback: 25
+
+# ── Position Sizing ────────────────────────────────────────────────────────────
+sizing:
+  risk_pct:         0.02   # 2% NAV risk per trade
+  max_concurrent:   2      # max open ILSS positions
+  max_daily_trades: 2      # hard cap per day
+
+# ── Risk Management ────────────────────────────────────────────────────────────
+risk:
+  initial_capital_gbp:   1500   # for hard stop calculation
+  hard_stop_pct:         0.50   # halt + close all if NAV < 50% of initial
+  daily_loss_limit_pct:  0.03   # halt new entries if day P&L hits -3%
+  weekly_loss_limit_pct: 0.05   # halt if week P&L hits -5%
+  news_blackout_minutes: 15     # no entries 15 min before/after high-impact news
+
+# ── Data ───────────────────────────────────────────────────────────────────────
+data:
+  m15_count:   300    # M15 bars to fetch (covers 3 days)
+  daily_count: 250    # daily bars to fetch (covers ~1 year for bias)

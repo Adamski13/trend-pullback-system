@@ -5,10 +5,15 @@ TPS v2 — OANDA Signal Generator
 Fetches account data and instrument prices directly from OANDA, computes
 EWMAC forecasts + vol-targeted positions, and optionally places orders.
 
+Hedging-safe: tracks its own OANDA trade IDs so it never touches ILSS trades.
+Instruments marked execution: signal_only are reported but not traded on OANDA.
+
 Environment variables required:
-    OANDA_TOKEN    — your API token (Settings → Manage API Access)
-    OANDA_ACCOUNT  — account ID  (e.g. 001-001-12345678-001)
-    OANDA_ENV      — "practice" or "live"  (default: practice)
+    OANDA_TOKEN           — your API token
+    OANDA_ACCOUNT         — account ID  (e.g. 001-004-XXXXXXX-001)
+    OANDA_ENV             — "practice" or "live"  (default: practice)
+    TPS_TELEGRAM_TOKEN    — Telegram bot token (TPS-specific bot)
+    TPS_TELEGRAM_CHAT_ID  — Telegram chat ID
 
 Usage:
     python generate_signals.py              # paper mode — report only
@@ -40,13 +45,52 @@ ROOT       = Path(__file__).parent
 CONFIG     = ROOT / "config.yaml"
 STATE_FILE = ROOT / "state.json"   # persists avg_pos between runs
 
-# ── state (avg_pos for buffer calculation) ────────────────────────────────────
+# ── state (avg_pos + trade IDs for hedging) ───────────────────────────────────
 
 def load_state() -> dict:
     if STATE_FILE.exists():
         with open(STATE_FILE) as f:
             return json.load(f)
     return {}
+
+
+def _tps_units(state: dict, symbol: str) -> float:
+    """Sum of units across all tracked TPS trade IDs for this symbol."""
+    trades = state.get("tps_trades", {}).get(symbol, [])
+    return sum(t.get("units", 0.0) for t in trades)
+
+
+def _record_tps_trade(state: dict, symbol: str, trade_id: str, units: float):
+    """Add a new TPS trade ID to state."""
+    state.setdefault("tps_trades", {}).setdefault(symbol, [])
+    state["tps_trades"][symbol].append({"trade_id": trade_id, "units": units})
+
+
+def _close_tps_trades(client: OandaClient, state: dict, symbol: str,
+                      units_to_close: float) -> None:
+    """
+    Close TPS trade IDs for symbol, oldest first, until units_to_close is met.
+    Full close if units_to_close >= current total.
+    """
+    state.setdefault("tps_trades", {}).setdefault(symbol, [])
+    trades = state["tps_trades"][symbol]
+    closed = []
+    remaining_to_close = abs(units_to_close)
+
+    for trade in trades:
+        if remaining_to_close <= 0:
+            break
+        try:
+            client.close_trade(trade["trade_id"])
+            print(f"  Closed TPS trade {trade['trade_id']} ({trade['units']} units)")
+            closed.append(trade["trade_id"])
+            remaining_to_close -= abs(trade.get("units", 0.0))
+        except Exception as e:
+            print(f"  ERROR closing trade {trade['trade_id']}: {e}")
+
+    state["tps_trades"][symbol] = [
+        t for t in trades if t["trade_id"] not in closed
+    ]
 
 
 def save_state(state: dict):
@@ -275,28 +319,46 @@ def main():
     try:
         account = client.get_account()
         capital = args.capital if args.capital else account["nav"]
-        print(f"  NAV: ${capital:,.2f}")
+        print(f"  NAV: {capital:,.2f}")
     except Exception as e:
-        print(f"  WARNING: Could not fetch account ({e}). Using --capital or default $100k.")
+        print(f"  WARNING: Could not fetch account ({e}). Using --capital or default.")
         account = None
-        capital = args.capital or 100_000
+        risk_cfg = config.get("risk", {})
+        capital  = args.capital or float(risk_cfg.get("initial_capital_gbp", 1500))
 
-    # ── positions ─────────────────────────────────────────────────────────────
-    print("Fetching current positions...")
-    try:
-        open_positions = client.get_positions()
-    except Exception as e:
-        print(f"  WARNING: Could not fetch positions ({e}). Assuming flat.")
-        open_positions = {}
+    # ── hard stop: 50% NAV ────────────────────────────────────────────────────
+    risk_cfg    = config.get("risk", {})
+    initial_cap = float(risk_cfg.get("initial_capital_gbp", 1500))
+    hard_stop   = initial_cap * float(risk_cfg.get("hard_stop_pct", 0.50))
+    if capital < hard_stop:
+        msg = (f"HARD STOP: NAV {capital:.0f} < {hard_stop:.0f} "
+               f"(50% of {initial_cap:.0f}). Closing all trades.")
+        print(f"🚨 {msg}")
+        if args.live:
+            client.close_all_trades()
+        save_state(state)
+        sys.exit(1)
+
+    # ── positions (TPS-owned trades only, hedging-safe) ───────────────────────
+    print("Fetching TPS positions...")
+    # Use tracked TPS trade IDs from state — not get_positions() which would
+    # include ILSS trades on the same hedging account.
+    open_positions = {
+        sym: _tps_units(state, sym)
+        for instr in config["instruments"]
+        for sym in [instr["symbol"]]
+        if _tps_units(state, sym) != 0
+    }
 
     # ── signals ───────────────────────────────────────────────────────────────
     print("Computing signals...")
     signals = []
 
     for instr in config["instruments"]:
-        sym    = instr["symbol"]
-        weight = instr["weight"]
-        label  = instr.get("label", sym)
+        sym       = instr["symbol"]
+        weight    = instr["weight"]
+        label     = instr.get("label", sym)
+        execution = instr.get("execution", "live")
 
         print(f"  {sym}...", end=" ", flush=True)
         try:
@@ -334,6 +396,7 @@ def main():
             "symbol":        sym,
             "label":         label,
             "weight":        weight,
+            "execution":     execution,
             "current_units": cur,
             "target_units":  tgt,
             "delta":         delta,
@@ -342,26 +405,36 @@ def main():
             "action":        action,
         })
         signals.append(sig)
-        print("OK")
+        print("OK" if execution == "live" else "OK [signal only]")
 
     # ── report ─────────────────────────────────────────────────────────────────
     print_report(account, signals, env, live=args.live)
 
-    # ── execute ────────────────────────────────────────────────────────────────
+    # ── execute (hedging-safe: trade by ID, skip signal_only) ────────────────
     if args.live:
         print("Executing orders...")
         for s in signals:
             if "error" in s or s["action"] == "HOLD":
                 continue
-            sym = s["symbol"]
+            sym       = s["symbol"]
+            execution = s.get("execution", "live")
+
+            if execution == "signal_only":
+                print(f"  {sym}: SIGNAL ONLY — no order placed (see Telegram alert)")
+                continue
+
             try:
                 if s["action"] == "CLOSE":
-                    resp = client.close_long(sym)
-                    print(f"  CLOSED {sym}: {resp}")
-                else:
+                    _close_tps_trades(client, state, sym, s["current_units"])
+                elif s["action"] == "BUY":
                     units = round(s["delta"])
-                    resp  = client.place_order(sym, units)
-                    print(f"  ORDER {sym} {units:+d}: {resp.get('orderFillTransaction', {}).get('type', resp)}")
+                    resp, trade_id = client.place_order_tracked(sym, units)
+                    if trade_id:
+                        _record_tps_trade(state, sym, trade_id, units)
+                    print(f"  ORDER {sym} +{units}: trade_id={trade_id}")
+                elif s["action"] == "SELL":
+                    # Reduce: close oldest TPS trades for this symbol
+                    _close_tps_trades(client, state, sym, abs(s["delta"]))
             except Exception as e:
                 print(f"  ERROR executing {sym}: {e}")
 

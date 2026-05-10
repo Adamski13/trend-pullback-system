@@ -1,6 +1,8 @@
 """
-OANDA v20 REST API client.
-Handles account info, positions, candle data, and order placement.
+OANDA v20 REST API client for ILSS signal generator.
+
+Extends the TPS v2 client with M15 intraday candles and order management
+suitable for intraday stop-loss entries.
 """
 
 import requests
@@ -24,7 +26,7 @@ class OandaClient:
             "Accept-Datetime-Format": "RFC3339",
         })
 
-    # ── internal helpers ─────────────────────────────────────────────────────
+    # ── internal helpers ──────────────────────────────────────────────────────
 
     def _get(self, path: str, params: dict = None) -> dict:
         r = self._session.get(f"{self.base_url}{path}", params=params, timeout=30)
@@ -41,7 +43,7 @@ class OandaClient:
         r.raise_for_status()
         return r.json()
 
-    # ── account ──────────────────────────────────────────────────────────────
+    # ── account ───────────────────────────────────────────────────────────────
 
     def get_account(self) -> dict:
         """Return key account metrics: NAV, balance, unrealized P&L."""
@@ -60,94 +62,18 @@ class OandaClient:
     def get_positions(self) -> dict:
         """
         Return current open positions.
-        Dict mapping instrument -> net signed units (positive = long).
+        Dict mapping instrument → net signed units (positive = long).
         """
         data = self._get(f"/v3/accounts/{self.account_id}/positions")
         positions = {}
         for pos in data.get("positions", []):
             instr       = pos["instrument"]
             long_units  = float(pos["long"]["units"])
-            short_units = float(pos["short"]["units"])   # negative value
+            short_units = float(pos["short"]["units"])   # negative
             net         = long_units + short_units
             if net != 0:
                 positions[instr] = net
         return positions
-
-    # ── market data ───────────────────────────────────────────────────────────
-
-    def get_candles(self, instrument: str, count: int = 400,
-                    granularity: str = "D") -> pd.DataFrame:
-        """
-        Fetch daily mid-price OHLC candles for `instrument`.
-
-        Returns DataFrame with DatetimeIndex and columns:
-            Open, High, Low, Close, Volume
-        Only complete (closed) candles are included.
-        """
-        data = self._get(
-            f"/v3/instruments/{instrument}/candles",
-            params={"count": count, "granularity": granularity, "price": "M"},
-        )
-        rows = []
-        for c in data.get("candles", []):
-            if not c.get("complete", False):
-                continue
-            rows.append({
-                "date":   pd.to_datetime(c["time"]).normalize(),
-                "Open":   float(c["mid"]["o"]),
-                "High":   float(c["mid"]["h"]),
-                "Low":    float(c["mid"]["l"]),
-                "Close":  float(c["mid"]["c"]),
-                "Volume": int(c["volume"]),
-            })
-
-        if not rows:
-            raise ValueError(f"No complete candles returned for {instrument}")
-
-        df = pd.DataFrame(rows).set_index("date")
-        df = df[~df.index.duplicated(keep="last")]
-        df.sort_index(inplace=True)
-        return df
-
-    def get_current_price(self, instrument: str) -> float:
-        """Return latest mid-price (may include today's incomplete bar)."""
-        data = self._get(
-            f"/v3/instruments/{instrument}/candles",
-            params={"count": 1, "granularity": "D", "price": "M"},
-        )
-        candles = data.get("candles", [])
-        if candles:
-            return float(candles[-1]["mid"]["c"])
-        raise ValueError(f"Could not fetch price for {instrument}")
-
-    # ── orders ────────────────────────────────────────────────────────────────
-
-    def place_order(self, instrument: str, units: float) -> dict:
-        """
-        Place a market order.
-        units > 0 → buy (open/increase long)
-        units < 0 → sell (reduce/close long)
-
-        Uses REDUCE_FIRST so partial closes work correctly.
-        """
-        body = {
-            "order": {
-                "type":         "MARKET",
-                "instrument":   instrument,
-                "units":        str(int(units)),
-                "timeInForce":  "FOK",
-                "positionFill": "REDUCE_FIRST",
-            }
-        }
-        return self._post(f"/v3/accounts/{self.account_id}/orders", body)
-
-    def close_long(self, instrument: str) -> dict:
-        """Close the entire long position for an instrument."""
-        body = {"longUnits": "ALL"}
-        return self._put(
-            f"/v3/accounts/{self.account_id}/positions/{instrument}/close",
-            body,
-        )
 
     def get_open_trades(self) -> list[dict]:
         """Return list of open trade dicts (id, instrument, units, price, stopLoss)."""
@@ -164,15 +90,90 @@ class OandaClient:
             })
         return trades
 
+    # ── market data ───────────────────────────────────────────────────────────
+
+    def get_candles(self, instrument: str, count: int = 250,
+                    granularity: str = "D") -> pd.DataFrame:
+        """
+        Fetch mid-price OHLC candles (daily by default).
+        Only complete (closed) candles returned.
+        """
+        data = self._get(
+            f"/v3/instruments/{instrument}/candles",
+            params={"count": count, "granularity": granularity, "price": "M"},
+        )
+        return self._candles_to_df(data, normalize_date=(granularity == "D"))
+
+    def get_m15_candles(self, instrument: str, count: int = 300) -> pd.DataFrame:
+        """
+        Fetch M15 mid-price OHLC candles.
+        Only complete (closed) candles returned.
+        Index is UTC DatetimeIndex.
+        """
+        data = self._get(
+            f"/v3/instruments/{instrument}/candles",
+            params={"count": count, "granularity": "M15", "price": "M"},
+        )
+        return self._candles_to_df(data, normalize_date=False)
+
+    def _candles_to_df(self, data: dict, normalize_date: bool = False) -> pd.DataFrame:
+        rows = []
+        for c in data.get("candles", []):
+            if not c.get("complete", False):
+                continue
+            ts = pd.to_datetime(c["time"], utc=True)
+            if normalize_date:
+                ts = ts.normalize()
+            rows.append({
+                "date":   ts,
+                "Open":   float(c["mid"]["o"]),
+                "High":   float(c["mid"]["h"]),
+                "Low":    float(c["mid"]["l"]),
+                "Close":  float(c["mid"]["c"]),
+                "Volume": int(c["volume"]),
+            })
+
+        if not rows:
+            raise ValueError("No complete candles returned")
+
+        df = pd.DataFrame(rows).set_index("date")
+        df = df[~df.index.duplicated(keep="last")]
+        df.sort_index(inplace=True)
+        return df
+
+    # ── orders ────────────────────────────────────────────────────────────────
+
+    def place_market_order(self, instrument: str, units: int,
+                           stop_loss: float | None = None) -> dict:
+        """
+        Place a market order with an optional stop-loss order attached.
+
+        units > 0 → long entry
+        units < 0 → short entry (Phase 2+ only)
+        """
+        order = {
+            "type":         "MARKET",
+            "instrument":   instrument,
+            "units":        str(units),
+            "timeInForce":  "FOK",
+            "positionFill": "REDUCE_FIRST",
+        }
+        if stop_loss is not None:
+            order["stopLossOnFill"] = {
+                "price":       f"{stop_loss:.5f}",
+                "timeInForce": "GTC",
+            }
+        return self._post(f"/v3/accounts/{self.account_id}/orders", {"order": order})
+
     def close_trade(self, trade_id: str) -> dict:
-        """Close a specific trade by ID (hedging-safe)."""
+        """Close a specific trade by ID."""
         return self._put(
             f"/v3/accounts/{self.account_id}/trades/{trade_id}/close",
             {"units": "ALL"},
         )
 
     def close_all_trades(self) -> list[dict]:
-        """Close every open trade. Used for emergency hard stop."""
+        """Close every open trade on the account. Used for emergency hard stop."""
         trades  = self.get_open_trades()
         results = []
         for t in trades:
@@ -181,13 +182,3 @@ class OandaClient:
             except Exception as e:
                 results.append({"error": str(e), "trade_id": t["id"]})
         return results
-
-    def place_order_tracked(self, instrument: str, units: float) -> tuple[dict, str]:
-        """
-        Place a market order and return (response, trade_id).
-        trade_id is extracted from the fill transaction.
-        """
-        resp     = self.place_order(instrument, units)
-        fill     = resp.get("orderFillTransaction", {})
-        trade_id = fill.get("tradeOpened", {}).get("tradeID", "")
-        return resp, trade_id

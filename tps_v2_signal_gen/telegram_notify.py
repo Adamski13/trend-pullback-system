@@ -26,12 +26,17 @@ class TelegramNotifier:
     """Send TPS v2 signals to Telegram."""
     
     def __init__(self, bot_token: str = None, chat_id: str = None):
-        self.bot_token = bot_token or os.environ.get('TELEGRAM_BOT_TOKEN', '')
-        self.chat_id = chat_id or os.environ.get('TELEGRAM_CHAT_ID', '')
+        # Prefer TPS-specific vars; fall back to shared vars
+        self.bot_token = (bot_token
+                          or os.environ.get('TPS_TELEGRAM_TOKEN')
+                          or os.environ.get('TELEGRAM_BOT_TOKEN', ''))
+        self.chat_id   = (chat_id
+                          or os.environ.get('TPS_TELEGRAM_CHAT_ID')
+                          or os.environ.get('TELEGRAM_CHAT_ID', ''))
         self.enabled = bool(self.bot_token and self.chat_id)
-        
+
         if not self.enabled:
-            print("  Telegram: not configured (set TELEGRAM_BOT_TOKEN and TELEGRAM_CHAT_ID)")
+            print("  Telegram: not configured (set TPS_TELEGRAM_TOKEN / TPS_TELEGRAM_CHAT_ID)")
     
     def send(self, message: str) -> bool:
         """Send a message. Returns True if successful."""

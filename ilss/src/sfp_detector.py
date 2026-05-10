@@ -96,6 +96,19 @@ def detect_sfps(
         ("asian_low",     "asian_low",     "bull"),   # sweep below Asian low → bull
         ("asian_high",    "asian_high",    "bear"),   # sweep above Asian high → bear
     ]
+    # Weekly levels — optional (only if computed by prepare())
+    if "prev_week_low" in df.columns:
+        level_defs.append(("prev_week_low",  "prev_week_low",  "bull"))
+    if "prev_week_high" in df.columns:
+        level_defs.append(("prev_week_high", "prev_week_high", "bear"))
+
+    # Intraday session levels — optional (added by compute_intraday_session_levels())
+    _intraday = ["london_open", "london", "ny_open", "ny_afternoon", "ny_close"]
+    for _sess in _intraday:
+        if f"{_sess}_low" in df.columns:
+            level_defs.append((f"{_sess}_low",  f"{_sess}_low",  "bull"))
+        if f"{_sess}_high" in df.columns:
+            level_defs.append((f"{_sess}_high", f"{_sess}_high", "bear"))
 
     for i in range(len(df)):
         row = df.iloc[i]

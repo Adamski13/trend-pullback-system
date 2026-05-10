@@ -10,15 +10,18 @@
 #   Bitcoin:   BTC_USD
 
 instruments:
-  - symbol: XAU_USD
-    label: Gold
-    weight: 0.333
-  - symbol: NAS100_USD
-    label: Nasdaq 100
-    weight: 0.333
-  - symbol: BTC_USD
-    label: Bitcoin
-    weight: 0.334
+  - symbol:     XAU_USD
+    label:      Gold
+    weight:     0.333
+    execution:  live
+  - symbol:     NAS100_USD
+    label:      Nasdaq 100
+    weight:     0.333
+    execution:  live
+  - symbol:     BTC_USD
+    label:      Bitcoin
+    weight:     0.334
+    execution:  signal_only   # manual execution on Hyperliquid
 
 # EWMAC signal parameters — do not change
 ewmac:
@@ -56,3 +59,12 @@ buffering:
 data:
   candle_count: 400             # daily bars (must be > 200 + warmup)
   granularity: D
+
+# ── Risk Management ────────────────────────────────────────────────────────────
+risk:
+  initial_capital_gbp: 1500    # for hard stop calculation
+  hard_stop_pct:       0.50    # halt + close all trades if NAV < 50% of initial
+
+# ── Instruments marked signal_only are not traded on OANDA ────────────────────
+# BTC is signal_only — execution is on Hyperliquid or manually
+# (execution field per instrument below)
